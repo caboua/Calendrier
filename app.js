@@ -1,3 +1,8 @@
+function formatDateFR(dateText) {
+  if (!dateText) return "";
+  return new Date(dateText + "T00:00:00").toLocaleDateString("fr-FR");
+}
+
 async function chargerCalendrier() {
   const lastUpdate = document.getElementById("lastUpdate");
   const calendarEl = document.getElementById("calendar");
@@ -14,7 +19,7 @@ async function chargerCalendrier() {
     lastUpdate.textContent = "Calendrier synchronisé avec Airbnb et Booking.";
 
     const events = reservations.map(r => ({
-      title: `${r.source || "Réservation"} - ${r.nom || "Réservé"}`,
+      title: r.nom ? `${r.nom}` : "Réservé",
       start: r.start,
       end: r.end,
       allDay: true,
@@ -27,6 +32,19 @@ async function chargerCalendrier() {
       locale: "fr",
       firstDay: 1,
       height: "auto",
+
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,listMonth"
+      },
+
+      buttonText: {
+        today: "Aujourd'hui",
+        month: "Mois",
+        list: "Liste"
+      },
+
       events,
 
       eventClick: function(info) {
@@ -34,13 +52,13 @@ async function chargerCalendrier() {
 
         alert(
           "Détail de la réservation\n\n" +
-          "Plateforme : " + (r.source || "") + "\n" +
-          "Nom : " + (r.nom || "Non disponible") + "\n" +
-          "Arrivée : " + (r.start || "") + "\n" +
-          "Départ : " + (r.end || "") + "\n" +
-          "Voyageurs : " + (r.voyageurs || "Non disponible") + "\n" +
-          "Code : " + (r.code || "Non disponible") + "\n" +
-          "Total payé : " + (r.total_paye || "Non disponible") + "\n" +
+          "Plateforme : " + (r.source || "") + "\n\n" +
+          "Nom : " + (r.nom || "Non disponible") + "\n\n" +
+          "Arrivée : " + formatDateFR(r.start) + "\n" +
+          "Départ : " + formatDateFR(r.end) + "\n\n" +
+          "Voyageurs : " + (r.voyageurs || "Non disponible") + "\n\n" +
+          "Code : " + (r.code || "Non disponible") + "\n\n" +
+          "Total payé : " + (r.total_paye || "Non disponible") + "\n\n" +
           "Vous gagnez : " + (r.vous_gagnez || "Non disponible")
         );
       }
