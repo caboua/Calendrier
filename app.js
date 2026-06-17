@@ -1,14 +1,25 @@
 function formatDateFR(dateText) {
-  if (!dateText) return "";
+  if (!dateText) return "Non disponible";
   return new Date(dateText + "T00:00:00").toLocaleDateString("fr-FR");
 }
 
 function cleanText(value) {
   if (!value) return "Non disponible";
   return String(value)
-    .replace(/�/g, "€")
-    .replace(/\?/g, "€")
+    .replace(/�/g, "")
+    .replace(/\?/g, "")
     .trim();
+}
+
+function cleanMoney(value) {
+  if (!value) return "Non disponible";
+  let text = String(value)
+    .replace(/�/g, "")
+    .replace(/\?/g, "")
+    .replace(/€/g, "")
+    .trim();
+
+  return text + " €";
 }
 
 async function chargerCalendrier() {
@@ -54,8 +65,8 @@ async function chargerCalendrier() {
           "Nombre de nuits : " + cleanText(r.nuits) + "\n\n" +
           "Voyageurs : " + cleanText(r.voyageurs) + "\n\n" +
           "Code : " + cleanText(r.code) + "\n\n" +
-          "Total payé : " + cleanText(r.total_paye) + "\n\n" +
-          "Vous gagnez : " + cleanText(r.vous_gagnez)
+          "Total payé : " + cleanMoney(r.total_paye) + "\n\n" +
+          "Vous gagnez : " + cleanMoney(r.vous_gagnez)
         );
       }
     });
