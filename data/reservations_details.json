@@ -7,9 +7,17 @@
     "voyageurs": "5?adultes",
     "code": "HMXZ4EJYQK",
     "total_paye": "397,93 ?",
-    "vous_gagnez": "325,26 ?",
-    "sujet": "R?servation confirm?e?: Fanny Virassamy arrive le 10 juil.",
-    "email_date": "2026-05-27T18:50:09.000Z"
+    "vous_gagnez": "325,26 ?"
+  },
+  {
+    "source": "Airbnb",
+    "nom": "Nansly Durimel",
+    "start": "2026-05-23",
+    "end": "2026-05-23",
+    "voyageurs": "1?adulte",
+    "code": "HMHYQMZBC4",
+    "total_paye": "134,09 ?",
+    "vous_gagnez": "110,58 ?"
   },
   {
     "source": "Airbnb",
@@ -19,9 +27,7 @@
     "voyageurs": "5?adultes",
     "code": "HMQH58XXQA",
     "total_paye": "421,37 ?",
-    "vous_gagnez": "344,35 ?",
-    "sujet": "R?servation confirm?e?: Natacha Couinedic@Hotmail.Com arrive le 18 juil.",
-    "email_date": "2026-05-19T17:52:26.000Z"
+    "vous_gagnez": "344,35 ?"
   },
   {
     "source": "Airbnb",
@@ -31,9 +37,7 @@
     "voyageurs": "2?adultes, 1 b?b?",
     "code": "HMTEBXBNN8",
     "total_paye": "436,24 ?",
-    "vous_gagnez": "358,90 ?",
-    "sujet": "R?servation confirm?e?: Ludmina Delta-Karat arrive le 30 avr.",
-    "email_date": "2026-04-29T13:46:29.000Z"
+    "vous_gagnez": "358,90 ?"
   },
   {
     "source": "Airbnb",
@@ -43,9 +47,7 @@
     "voyageurs": "6?adultes",
     "code": "HMKSQPBHDJ",
     "total_paye": "856,90 ?",
-    "vous_gagnez": "684,82 ?",
-    "sujet": "R?servation confirm?e?: Karine Pauchet arrive le 15 avr.",
-    "email_date": "2026-03-31T09:41:01.000Z"
+    "vous_gagnez": "684,82 ?"
   },
   {
     "source": "Airbnb",
@@ -55,8 +57,6 @@
     "voyageurs": "1?adulte",
     "code": "HMJJ8234YH",
     "total_paye": "703,61 ?",
-    "vous_gagnez": "570,36 ?",
-    "sujet": "R?servation confirm?e?: Julie Lottin arrive le 22 avr.",
-    "email_date": "2026-03-11T16:20:26.000Z"
+    "vous_gagnez": "570,36 ?"
   }
 ]
