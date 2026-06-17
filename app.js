@@ -3,22 +3,23 @@ async function chargerCalendrier() {
   const calendarEl = document.getElementById("calendar");
 
   try {
-    const response = await fetch("./data/reservations.json?v=" + Date.now());
-    const reservations = await response.json();
+    const response = await fetch("./data/reservations_details.json?v=" + Date.now());
+    let reservations = await response.json();
+
+    if (!Array.isArray(reservations) || reservations.length === 0) {
+      const fallback = await fetch("./data/reservations.json?v=" + Date.now());
+      reservations = await fallback.json();
+    }
 
     lastUpdate.textContent = "Calendrier synchronisé avec Airbnb et Booking.";
 
     const events = reservations.map(r => ({
-      title: `${r.source} - Réservé`,
+      title: `${r.source || "Réservation"} - ${r.nom || "Réservé"}`,
       start: r.start,
       end: r.end,
       allDay: true,
       color: r.source === "Booking" ? "#0071c2" : "#ff5a5f",
-      extendedProps: {
-        source: r.source,
-        debut: r.start,
-        fin: r.end
-      }
+      extendedProps: r
     }));
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -26,18 +27,21 @@ async function chargerCalendrier() {
       locale: "fr",
       firstDay: 1,
       height: "auto",
-      events: events,
+      events,
 
       eventClick: function(info) {
-        const source = info.event.extendedProps.source;
-        const debut = new Date(info.event.extendedProps.debut).toLocaleDateString("fr-FR");
-        const fin = new Date(info.event.extendedProps.fin).toLocaleDateString("fr-FR");
+        const r = info.event.extendedProps;
 
         alert(
           "Détail de la réservation\n\n" +
-          "Plateforme : " + source + "\n" +
-          "Arrivée : " + debut + "\n" +
-          "Départ : " + fin
+          "Plateforme : " + (r.source || "") + "\n" +
+          "Nom : " + (r.nom || "Non disponible") + "\n" +
+          "Arrivée : " + (r.start || "") + "\n" +
+          "Départ : " + (r.end || "") + "\n" +
+          "Voyageurs : " + (r.voyageurs || "Non disponible") + "\n" +
+          "Code : " + (r.code || "Non disponible") + "\n" +
+          "Total payé : " + (r.total_paye || "Non disponible") + "\n" +
+          "Vous gagnez : " + (r.vous_gagnez || "Non disponible")
         );
       }
     });
