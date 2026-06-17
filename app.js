@@ -3,6 +3,14 @@ function formatDateFR(dateText) {
   return new Date(dateText + "T00:00:00").toLocaleDateString("fr-FR");
 }
 
+function cleanText(value) {
+  if (!value) return "Non disponible";
+  return String(value)
+    .replace(/�/g, "€")
+    .replace(/\?/g, "€")
+    .trim();
+}
+
 async function chargerCalendrier() {
   const lastUpdate = document.getElementById("lastUpdate");
   const calendarEl = document.getElementById("calendar");
@@ -19,7 +27,7 @@ async function chargerCalendrier() {
     lastUpdate.textContent = "Calendrier synchronisé avec Airbnb et Booking.";
 
     const events = reservations.map(r => ({
-      title: r.nom ? `${r.nom}` : "Réservé",
+      title: r.nom ? r.nom : "Réservé",
       start: r.start,
       end: r.end,
       allDay: true,
@@ -32,19 +40,6 @@ async function chargerCalendrier() {
       locale: "fr",
       firstDay: 1,
       height: "auto",
-
-      headerToolbar: {
-        left: "prev,next today",
-        center: "title",
-        right: "dayGridMonth,listMonth"
-      },
-
-      buttonText: {
-        today: "Aujourd'hui",
-        month: "Mois",
-        list: "Liste"
-      },
-
       events,
 
       eventClick: function(info) {
@@ -52,14 +47,15 @@ async function chargerCalendrier() {
 
         alert(
           "Détail de la réservation\n\n" +
-          "Plateforme : " + (r.source || "") + "\n\n" +
-          "Nom : " + (r.nom || "Non disponible") + "\n\n" +
+          "Plateforme : " + cleanText(r.source) + "\n\n" +
+          "Nom : " + cleanText(r.nom) + "\n\n" +
           "Arrivée : " + formatDateFR(r.start) + "\n" +
-          "Départ : " + formatDateFR(r.end) + "\n\n" +
-          "Voyageurs : " + (r.voyageurs || "Non disponible") + "\n\n" +
-          "Code : " + (r.code || "Non disponible") + "\n\n" +
-          "Total payé : " + (r.total_paye || "Non disponible") + "\n\n" +
-          "Vous gagnez : " + (r.vous_gagnez || "Non disponible")
+          "Départ : " + formatDateFR(r.end) + "\n" +
+          "Nombre de nuits : " + cleanText(r.nuits) + "\n\n" +
+          "Voyageurs : " + cleanText(r.voyageurs) + "\n\n" +
+          "Code : " + cleanText(r.code) + "\n\n" +
+          "Total payé : " + cleanText(r.total_paye) + "\n\n" +
+          "Vous gagnez : " + cleanText(r.vous_gagnez)
         );
       }
     });
