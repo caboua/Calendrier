@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calendrier partagé - Villa CABOUA</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="badge">Villa CABOUA</p>
+      <h1>Calendrier des réservations</h1>
+      <p class="subtitle">Vue partagée des périodes réservées Airbnb et Booking.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="legend">
+        <span><i class="airbnb"></i> Airbnb</span>
+        <span><i class="booking"></i> Booking</span>
+        <span><i class="manual"></i> Manuel</span>
+      </div>
+      <p id="lastUpdate">Chargement du calendrier...</p>
+      <div id="calendar"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Calendrier indicatif. Vérifier les plateformes avant confirmation définitive.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
