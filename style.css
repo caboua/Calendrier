@@ -249,6 +249,37 @@ main { flex: 1; }
 
 .res-meta span { display: flex; align-items: center; gap: 3px; }
 
+/* Réservations Booking à compléter (dates seules via iCal) */
+.reservation-item.acompleter {
+  border-left-style: dashed;
+  background: #f8fafc;
+}
+
+.res-todo {
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-weight: 700;
+}
+
+.fc .fc-acompleter {
+  background-image: repeating-linear-gradient(
+    45deg, rgba(255,255,255,.30) 0 6px, transparent 6px 12px);
+  font-style: italic;
+}
+
+.modal-note {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: .82rem;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
 .empty-state {
   text-align: center;
   color: #94a3b8;

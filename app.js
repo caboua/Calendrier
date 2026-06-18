@@ -68,6 +68,32 @@ function overlapsMonth(r, date) {
       && new Date(r.end   + "T00:00:00") > ms;
 }
 
+/* Deux séjours partagent-ils au moins une nuit ? */
+function overlaps(a, b) {
+  return new Date(a.start + "T00:00:00") < new Date(b.end + "T00:00:00")
+      && new Date(a.end   + "T00:00:00") > new Date(b.start + "T00:00:00");
+}
+
+/* Réservation Booking issue de l'iCal : on ne connaît que les dates. */
+function normalizeIcalBooking(r) {
+  return {
+    source:      "Booking",
+    nom:         "",                 // inconnu via iCal
+    start:       r.start,
+    end:         r.end,
+    voyageurs:   "",
+    code:        r.uid || "",
+    total_paye:  "",
+    vous_gagnez: "",
+    nuits:       countNights(r.start, r.end),
+    aCompleter:  true                // dates seules, à enrichir
+  };
+}
+
+function isValidIcal(r) {
+  return r.start && r.end && new Date(r.end) > new Date(r.start);
+}
+
 async function loadJson(path) {
   try {
     const res = await fetch(path + "?v=" + Date.now());
@@ -115,10 +141,11 @@ function ouvrirModal(r) {
   const src = (r.source || "Airbnb").toLowerCase();
   const srcLabel = r.source || "Airbnb";
   const nuits = r.nuits || countNights(r.start, r.end);
+  const todo = r.aCompleter || !r.nom;
 
   document.getElementById("modalContent").innerHTML = `
     <span class="modal-source-tag ${src}">${escapeHtml(srcLabel)}</span>
-    <div class="modal-name">${escapeHtml(r.nom)}</div>
+    <div class="modal-name">${escapeHtml(r.nom || "Réservation Booking")}</div>
     <div class="modal-grid">
       <div class="modal-field">
         <label>Arrivée</label>
@@ -144,9 +171,10 @@ function ouvrirModal(r) {
         <label>À recevoir</label>
         <span class="money">${escapeHtml(cleanMoney(r.vous_gagnez)) || "—"}</span>
       </div>
-      ${r.code ? `<div class="modal-field full"><label>Code réservation</label><span>${escapeHtml(r.code)}</span></div>` : ""}
+      ${r.code && !todo ? `<div class="modal-field full"><label>Code réservation</label><span>${escapeHtml(r.code)}</span></div>` : ""}
     </div>
-    ${r.code ? `<div class="modal-code">Référence : ${escapeHtml(r.code)}</div>` : ""}
+    ${todo ? `<div class="modal-note">ℹ️ Réservation Booking synchronisée automatiquement (dates seules). Pour le nom et le montant, ouvre la réservation sur l'extranet Booking et transmets-la.</div>` : ""}
+    ${r.code && !todo ? `<div class="modal-code">Référence : ${escapeHtml(r.code)}</div>` : ""}
   `;
   document.getElementById("modal").hidden = false;
 }
@@ -172,13 +200,19 @@ function sourceClass(source) {
   return "airbnb";
 }
 
+function cleKey(r) {
+  return r.code || r.nom || (r.start + "_" + r.end);
+}
+
 function cardReservation(r) {
   const sc = sourceClass(r.source);
   const nuits = r.nuits || countNights(r.start, r.end);
+  const todo = r.aCompleter || !r.nom;
+  const nom = r.nom || "Réservation Booking";
   return `
-    <article class="reservation-item ${sc}" data-key="${escapeHtml(r.code || r.nom)}">
+    <article class="reservation-item ${sc}${todo ? " acompleter" : ""}" data-key="${escapeHtml(cleKey(r))}">
       <div class="res-header">
-        <div class="res-name">${escapeHtml(r.nom)}</div>
+        <div class="res-name">${escapeHtml(nom)}</div>
         <span class="res-source ${sc}">${escapeHtml(r.source || "Airbnb")}</span>
       </div>
       <div class="res-dates">
@@ -188,6 +222,7 @@ function cardReservation(r) {
         <span>🌙 ${nuits} nuit${nuits > 1 ? "s" : ""}</span>
         ${r.voyageurs ? `<span>👥 ${escapeHtml(r.voyageurs)}</span>` : ""}
         ${cleanMoney(r.vous_gagnez) ? `<span>💰 ${escapeHtml(cleanMoney(r.vous_gagnez))}</span>` : ""}
+        ${todo ? `<span class="res-todo">à compléter</span>` : ""}
       </div>
     </article>
   `;
@@ -207,8 +242,7 @@ function afficherListeMois(reservations, calendarDate, onClickRes) {
   container.innerHTML = list.map(cardReservation).join("");
 
   list.forEach(r => {
-    const key = r.code || r.nom;
-    const el = container.querySelector(`[data-key="${CSS.escape(key)}"]`);
+    const el = container.querySelector(`[data-key="${CSS.escape(cleKey(r))}"]`);
     if (el) el.addEventListener("click", () => onClickRes(r));
   });
 }
@@ -223,26 +257,41 @@ async function chargerCalendrier() {
     .filter(isCurrentOrFuture)
     .sort((a, b) => a.start.localeCompare(b.start));
 
+  // Réservations Booking issues de l'iCal (dates seules). On affiche celles
+  // qui n'ont PAS encore de fiche détaillée, pour qu'une nouvelle résa
+  // apparaisse toute seule. Le nom/prix se complètent manuellement ensuite.
+  const bloque = await loadJson("./data/reservations.json");
+  const bookingAuto = bloque
+    .filter(r => (r.source || "").toLowerCase() === "booking")
+    .map(normalizeIcalBooking)
+    .filter(isValidIcal)
+    .filter(isCurrentOrFuture)
+    .filter(g => !reservations.some(r => overlaps(r, g)));
+
+  const toutes = reservations.concat(bookingAuto)
+    .sort((a, b) => a.start.localeCompare(b.start));
+
   const lastUpdate = document.getElementById("lastUpdate");
-  lastUpdate.textContent = reservations.length
-    ? `${reservations.length} réservation${reservations.length > 1 ? "s" : ""} chargée${reservations.length > 1 ? "s" : ""}`
+  lastUpdate.textContent = toutes.length
+    ? `${toutes.length} réservation${toutes.length > 1 ? "s" : ""} chargée${toutes.length > 1 ? "s" : ""}`
     : "Aucune réservation à venir.";
 
-  const events = reservations.map(r => {
+  const events = toutes.map(r => {
     const sc = sourceClass(r.source);
     const colors = { airbnb: "#ff5a5f", booking: "#0071c2", manuel: "#7c3aed" };
     return {
-      title:         r.nom,
+      title:         r.aCompleter ? "Booking — à compléter" : r.nom,
       start:         r.start,
       end:           r.end,
       allDay:        true,
       color:         colors[sc] || "#ff5a5f",
       display:       "block",
+      classNames:    r.aCompleter ? ["fc-acompleter"] : [],
       extendedProps: r
     };
   });
 
-  const initDate = reservations.find(r => isCurrentOrFuture(r))?.start;
+  const initDate = toutes.find(r => isCurrentOrFuture(r))?.start;
 
   const calendar = new FullCalendar.Calendar(
     document.getElementById("calendar"),
@@ -277,8 +326,8 @@ async function chargerCalendrier() {
 
       datesSet(info) {
         const date = info.view.currentStart;
-        afficherListeMois(reservations, date, ouvrirModal);
-        updateStats(reservations, date);
+        afficherListeMois(toutes, date, ouvrirModal);
+        updateStats(toutes, date);
       },
 
       eventClick(info) {
