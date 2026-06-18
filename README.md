@@ -19,7 +19,7 @@ Le calendrier sera ensuite consultable à l'adresse GitHub Pages du dépôt.
 
 ## Synchronisation automatique
 
-Le workflow GitHub Actions s'exécute automatiquement toutes les 30 minutes.
+Le workflow GitHub Actions s'exécute automatiquement toutes les 5 minutes.
 
 Il met à jour :
 
