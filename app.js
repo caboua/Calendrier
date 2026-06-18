@@ -4,22 +4,43 @@ function formatDateFR(dateText) {
 }
 
 function cleanText(value) {
-  if (!value) return "Non disponible";
-  return String(value)
-    .replace(/�/g, "")
-    .replace(/\?/g, "")
-    .trim();
+  if (!value) return "";
+  return String(value).replace(/�/g, "").replace(/\?/g, "").trim();
 }
 
 function cleanMoney(value) {
-  if (!value) return "Non disponible";
-  let text = String(value)
-    .replace(/�/g, "")
-    .replace(/\?/g, "")
-    .replace(/€/g, "")
-    .trim();
+  if (!value) return "";
+  let text = String(value).replace(/�/g, "").replace(/\?/g, "").replace(/€/g, "").trim();
+  return text ? text + " €" : "";
+}
 
-  return text + " €";
+function afficherReservationsDuMois(reservations, calendarDate) {
+  const container = document.getElementById("monthReservations");
+  if (!container) return;
+
+  const month = calendarDate.getMonth();
+  const year = calendarDate.getFullYear();
+
+  const list = reservations.filter(r => {
+    if (!r.start) return false;
+    const start = new Date(r.start + "T00:00:00");
+    return start.getMonth() === month && start.getFullYear() === year;
+  });
+
+  if (list.length === 0) {
+    container.innerHTML = "<p>Aucune réservation ce mois-ci.</p>";
+    return;
+  }
+
+  container.innerHTML = list.map(r => `
+    <div class="reservation-item ${r.source === "Booking" ? "booking" : ""}">
+      <strong>${cleanText(r.nom) || "Réservé"}</strong>
+      <div>${formatDateFR(r.start)} → ${formatDateFR(r.end)}</div>
+      <div>${cleanText(r.nuits) ? cleanText(r.nuits) + " nuit(s)" : ""}</div>
+      <div>${cleanText(r.voyageurs)}</div>
+      <div>${cleanMoney(r.total_paye)}</div>
+    </div>
+  `).join("");
 }
 
 async function chargerCalendrier() {
@@ -51,7 +72,21 @@ async function chargerCalendrier() {
       locale: "fr",
       firstDay: 1,
       height: "auto",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,listMonth"
+      },
+      buttonText: {
+        today: "Aujourd'hui",
+        month: "Mois",
+        list: "Liste"
+      },
       events,
+
+      datesSet: function(info) {
+        afficherReservationsDuMois(reservations, info.view.currentStart);
+      },
 
       eventClick: function(info) {
         const r = info.event.extendedProps;
@@ -72,11 +107,6 @@ async function chargerCalendrier() {
     });
 
     calendar.render();
-    afficherReservationsDuMois(reservations, calendar.getDate());
-
-calendar.on("datesSet", function() {
-  afficherReservationsDuMois(reservations, calendar.getDate());
-});
 
   } catch (e) {
     lastUpdate.textContent = "Erreur de chargement du calendrier.";
