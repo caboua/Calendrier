@@ -1,3 +1,9 @@
+/* ── Configuration ────────────────────────────────────── */
+
+const NOTES_API_URL = "https://script.google.com/macros/s/AKfycbyT5F1dLPELwdLbsedvIlzyLo_iZVP36LynNBokLYDMgiez5AlwrkbfbT3m-TVA4l0q1g/exec";
+
+let notesGlobales = [];
+
 /* ── Helpers ──────────────────────────────────────────── */
 
 function formatDateFR(dateText) {
@@ -15,11 +21,12 @@ function cleanText(value) {
     .trim();
 }
 
-function cleanMultiline(value) {
-  if (!value) return "";
-  return String(value)
-    .replace(/[^a-zA-ZÀ-ÿ0-9 '\-.,€\n]/g, "")
-    .trim();
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function cleanMoney(value) {
@@ -30,18 +37,33 @@ function cleanMoney(value) {
   return text ? text + " €" : "";
 }
 
-function escapeHtml(value) {
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function countNights(start, end) {
   if (!start || !end) return 0;
   return Math.round((new Date(end) - new Date(start)) / 86400000);
 }
+
+async function loadJson(path) {
+  try {
+    const res = await fetch(path + "?v=" + Date.now());
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function parseEuros(value) {
+  if (!value) return 0;
+  const n = parseFloat(String(value).replace(/[^\d,]/g, "").replace(",", "."));
+  return isNaN(n) ? 0 : n;
+}
+
+function formatEuros(n) {
+  return n > 0 ? n.toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " €" : "—";
+}
+
+/* ── Réservations ─────────────────────────────────────── */
 
 function normalizeReservation(r) {
   const nuits = r.nuits || countNights(r.start, r.end);
@@ -55,18 +77,7 @@ function normalizeReservation(r) {
     code: r.code || "",
     total_paye: r.total_paye || "",
     vous_gagnez: r.vous_gagnez || "",
-    nuits: nuits
-  };
-}
-
-function normalizeNote(n) {
-  return {
-    type: "note",
-    source: "Note",
-    nom: cleanText(n.title || "Note"),
-    start: n.start,
-    end: n.end || n.start,
-    description: cleanMultiline(n.description || "")
+    nuits
   };
 }
 
@@ -74,28 +85,22 @@ function isValidReservation(r) {
   return r.start && r.end && new Date(r.end) > new Date(r.start) && r.nom;
 }
 
-function isValidNote(n) {
-  return n.start && n.nom;
-}
-
 function isCurrentOrFuture(r) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const end = r.end || r.start;
-  return new Date(end + "T00:00:00") >= today;
+  return new Date((r.end || r.start) + "T00:00:00") >= today;
 }
 
 function overlapsMonth(r, date) {
   const ms = new Date(date.getFullYear(), date.getMonth(), 1);
   const me = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-  const start = new Date(r.start + "T00:00:00");
-  const end = new Date((r.end || r.start) + "T00:00:00");
-  return start < me && end >= ms;
+  return new Date(r.start + "T00:00:00") < me &&
+         new Date((r.end || r.start) + "T00:00:00") >= ms;
 }
 
 function overlaps(a, b) {
-  return new Date(a.start + "T00:00:00") < new Date(b.end + "T00:00:00")
-      && new Date(a.end + "T00:00:00") > new Date(b.start + "T00:00:00");
+  return new Date(a.start + "T00:00:00") < new Date(b.end + "T00:00:00") &&
+         new Date(a.end + "T00:00:00") > new Date(b.start + "T00:00:00");
 }
 
 function normalizeIcalBooking(r) {
@@ -118,28 +123,106 @@ function isValidIcal(r) {
   return r.start && r.end && new Date(r.end) > new Date(r.start);
 }
 
-async function loadJson(path) {
-  try {
-    const res = await fetch(path + "?v=" + Date.now());
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
+/* ── Notes jaunes ─────────────────────────────────────── */
+
+function normalizeNote(n, index) {
+  return {
+    type: "note",
+    id: n.id || "note_" + index + "_" + n.start,
+    source: "Note",
+    nom: cleanText(n.title || "Note"),
+    title: cleanText(n.title || "Note"),
+    start: n.start,
+    end: n.start,
+    description: String(n.description || "")
+  };
+}
+
+function isValidNote(n) {
+  return n.start && n.title;
+}
+
+async function saveNotes(notes) {
+  await fetch(NOTES_API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({ notes })
+  });
+
+  alert("Note enregistrée. La page va se recharger.");
+  setTimeout(() => location.reload(), 1500);
+}
+
+function ouvrirNoteForm(note = null, dateISO = null) {
+  const isEdit = !!note;
+
+  document.getElementById("modalContent").innerHTML = `
+    <span class="modal-source-tag note">Note jaune</span>
+    <div class="modal-name">${isEdit ? "Modifier la note" : "Ajouter une note"}</div>
+
+    <div class="modal-grid">
+      <div class="modal-field full">
+        <label>Date</label>
+        <input id="noteDate" type="date" value="${escapeHtml(note?.start || dateISO || "")}" style="width:100%;border:none;background:transparent;font-weight:600">
+      </div>
+
+      <div class="modal-field full">
+        <label>Titre</label>
+        <input id="noteTitle" type="text" value="${escapeHtml(note?.title || note?.nom || "")}" placeholder="Ex : Nettoyage villa" style="width:100%;border:none;background:transparent;font-weight:600">
+      </div>
+
+      <div class="modal-field full">
+        <label>Informations</label>
+        <textarea id="noteDescription" rows="5" placeholder="Écris ici les informations..." style="width:100%;border:none;background:transparent;font-family:inherit;font-weight:500;resize:vertical">${escapeHtml(note?.description || "")}</textarea>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+      ${isEdit ? `<button id="deleteNoteBtn" style="background:#fee2e2;color:#991b1b;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer">Supprimer</button>` : ""}
+      <button id="saveNoteBtn" style="background:#f2c94c;color:#1e293b;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer">Enregistrer</button>
+    </div>
+  `;
+
+  document.getElementById("modal").hidden = false;
+
+  document.getElementById("saveNoteBtn").onclick = async () => {
+    const start = document.getElementById("noteDate").value;
+    const title = document.getElementById("noteTitle").value.trim();
+    const description = document.getElementById("noteDescription").value.trim();
+
+    if (!start || !title) {
+      alert("Date et titre obligatoires.");
+      return;
+    }
+
+    let notes = [...notesGlobales];
+
+    const nouvelleNote = {
+      id: note?.id || "note_" + Date.now(),
+      title,
+      start,
+      description
+    };
+
+    if (isEdit) {
+      notes = notes.map(n => n.id === note.id ? nouvelleNote : n);
+    } else {
+      notes.push(nouvelleNote);
+    }
+
+    await saveNotes(notes);
+  };
+
+  if (isEdit && document.getElementById("deleteNoteBtn")) {
+    document.getElementById("deleteNoteBtn").onclick = async () => {
+      if (!confirm("Supprimer cette note ?")) return;
+      const notes = notesGlobales.filter(n => n.id !== note.id);
+      await saveNotes(notes);
+    };
   }
 }
 
 /* ── Stats ────────────────────────────────────────────── */
-
-function parseEuros(value) {
-  if (!value) return 0;
-  const n = parseFloat(String(value).replace(/[^\d,]/g, "").replace(",", "."));
-  return isNaN(n) ? 0 : n;
-}
-
-function formatEuros(n) {
-  return n > 0 ? n.toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " €" : "—";
-}
 
 function updateStats(reservations, calendarDate) {
   const year = calendarDate.getFullYear();
@@ -150,36 +233,24 @@ function updateStats(reservations, calendarDate) {
     return d.getFullYear() === year && d.getMonth() <= calendarDate.getMonth();
   });
 
-  const nuitsMois = duMois.reduce((s, r) => s + r.nuits, 0);
-  const revenuMois = duMois.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0);
-  const nuitsAnnee = deJanvierAuMoisActuel.reduce((s, r) => s + r.nuits, 0);
-  const revenuAnnee = deJanvierAuMoisActuel.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0);
+  document.getElementById("statNuitsMois").textContent =
+    duMois.reduce((s, r) => s + r.nuits, 0) || "0";
 
-  document.getElementById("statNuitsMois").textContent = nuitsMois || "0";
-  document.getElementById("statRevenuMois").textContent = formatEuros(revenuMois);
-  document.getElementById("statNuitsAnnee").textContent = nuitsAnnee || "0";
-  document.getElementById("statRevenuAnnee").textContent = formatEuros(revenuAnnee);
+  document.getElementById("statRevenuMois").textContent =
+    formatEuros(duMois.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
+
+  document.getElementById("statNuitsAnnee").textContent =
+    deJanvierAuMoisActuel.reduce((s, r) => s + r.nuits, 0) || "0";
+
+  document.getElementById("statRevenuAnnee").textContent =
+    formatEuros(deJanvierAuMoisActuel.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
 }
 
-/* ── Modal ────────────────────────────────────────────── */
+/* ── Modal réservation ────────────────────────────────── */
 
 function ouvrirModal(r) {
   if (r.type === "note") {
-    document.getElementById("modalContent").innerHTML = `
-      <span class="modal-source-tag note">Note</span>
-      <div class="modal-name">${escapeHtml(r.nom || "Note")}</div>
-      <div class="modal-grid">
-        <div class="modal-field full">
-          <label>Date</label>
-          <span>${formatDateFR(r.start)}</span>
-        </div>
-        <div class="modal-field full">
-          <label>Informations</label>
-          <span style="white-space:pre-line">${escapeHtml(r.description || "—")}</span>
-        </div>
-      </div>
-    `;
-    document.getElementById("modal").hidden = false;
+    ouvrirNoteForm(r);
     return;
   }
 
@@ -192,35 +263,17 @@ function ouvrirModal(r) {
     <span class="modal-source-tag ${src}">${escapeHtml(srcLabel)}</span>
     <div class="modal-name">${escapeHtml(r.nom || "Réservation Booking")}</div>
     <div class="modal-grid">
-      <div class="modal-field">
-        <label>Arrivée</label>
-        <span>${formatDateFR(r.start)}</span>
-      </div>
-      <div class="modal-field">
-        <label>Départ</label>
-        <span>${formatDateFR(r.end)}</span>
-      </div>
-      <div class="modal-field">
-        <label>Nuits</label>
-        <span>${nuits || "—"}</span>
-      </div>
-      <div class="modal-field">
-        <label>Voyageurs</label>
-        <span>${escapeHtml(r.voyageurs) || "—"}</span>
-      </div>
-      <div class="modal-field">
-        <label>Tarif client</label>
-        <span class="money">${escapeHtml(cleanMoney(r.total_paye)) || "—"}</span>
-      </div>
-      <div class="modal-field">
-        <label>À recevoir</label>
-        <span class="money">${escapeHtml(cleanMoney(r.vous_gagnez)) || "—"}</span>
-      </div>
+      <div class="modal-field"><label>Arrivée</label><span>${formatDateFR(r.start)}</span></div>
+      <div class="modal-field"><label>Départ</label><span>${formatDateFR(r.end)}</span></div>
+      <div class="modal-field"><label>Nuits</label><span>${nuits || "—"}</span></div>
+      <div class="modal-field"><label>Voyageurs</label><span>${escapeHtml(r.voyageurs) || "—"}</span></div>
+      <div class="modal-field"><label>Tarif client</label><span class="money">${escapeHtml(cleanMoney(r.total_paye)) || "—"}</span></div>
+      <div class="modal-field"><label>À recevoir</label><span class="money">${escapeHtml(cleanMoney(r.vous_gagnez)) || "—"}</span></div>
       ${r.code && !todo ? `<div class="modal-field full"><label>Code réservation</label><span>${escapeHtml(r.code)}</span></div>` : ""}
     </div>
     ${todo ? `<div class="modal-note">ℹ️ Réservation Booking synchronisée automatiquement, dates seules.</div>` : ""}
-    ${r.code && !todo ? `<div class="modal-code">Référence : ${escapeHtml(r.code)}</div>` : ""}
   `;
+
   document.getElementById("modal").hidden = false;
 }
 
@@ -247,7 +300,7 @@ function sourceClass(source, type) {
 }
 
 function cleKey(r) {
-  return r.code || r.nom || (r.start + "_" + (r.end || r.start));
+  return r.id || r.code || r.nom || (r.start + "_" + (r.end || r.start));
 }
 
 function cardReservation(r) {
@@ -261,9 +314,7 @@ function cardReservation(r) {
           <span class="res-source note">Note</span>
         </div>
         <div class="res-dates">📝 ${formatDateFR(r.start)}</div>
-        <div class="res-meta">
-          <span>${escapeHtml(r.description || "").split("\n")[0] || "Voir le détail"}</span>
-        </div>
+        <div class="res-meta"><span>${escapeHtml(r.description || "").split("\n")[0] || "Voir le détail"}</span></div>
       </article>
     `;
   }
@@ -328,14 +379,19 @@ async function chargerCalendrier() {
     .filter(g => !reservations.some(r => overlaps(r, g)));
 
   const notesJson = await loadJson("./data/notes.json");
-  const notes = notesJson
+  notesGlobales = notesJson.map((n, i) => ({
+    id: n.id || "note_" + i + "_" + n.start,
+    title: n.title || "Note",
+    start: n.start,
+    description: n.description || ""
+  }));
+
+  const notes = notesGlobales
     .map(normalizeNote)
     .filter(isValidNote)
     .filter(isCurrentOrFuture);
 
-  const toutes = reservations
-    .concat(bookingAuto)
-    .concat(notes)
+  const toutes = reservations.concat(bookingAuto).concat(notes)
     .sort((a, b) => a.start.localeCompare(b.start));
 
   const lastUpdate = document.getElementById("lastUpdate");
@@ -374,52 +430,43 @@ async function chargerCalendrier() {
 
   const initDate = toutes.find(r => isCurrentOrFuture(r))?.start;
 
-  const calendar = new FullCalendar.Calendar(
-    document.getElementById("calendar"),
-    {
-      initialView: "dayGridMonth",
-      initialDate: initDate || new Date().toISOString().slice(0, 10),
-      locale: "fr",
-      firstDay: 1,
-      height: "auto",
+  const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+    initialView: "dayGridMonth",
+    initialDate: initDate || new Date().toISOString().slice(0, 10),
+    locale: "fr",
+    firstDay: 1,
+    height: "auto",
 
-      headerToolbar: {
-        left: "prev,next today",
-        center: "title",
-        right: "dayGridMonth,listYear"
-      },
+    headerToolbar: {
+      left: "prev,next today",
+      center: "title",
+      right: "dayGridMonth,listYear"
+    },
 
-      views: {
-        listYear: { type: "list", duration: { years: 1 }, buttonText: "Liste" }
-      },
+    views: {
+      listYear: { type: "list", duration: { years: 1 }, buttonText: "Liste" }
+    },
 
-      buttonText: {
-        today: "Aujourd'hui",
-        month: "Mois"
-      },
+    buttonText: {
+      today: "Aujourd'hui",
+      month: "Mois"
+    },
 
-      events,
+    events,
 
-      eventDidMount(info) {
-        const r = info.event.extendedProps;
-        if (r.type === "note") {
-          info.el.title = r.description || r.nom;
-        } else if (r.nuits > 1) {
-          info.el.title = `${info.event.title} — ${r.nuits} nuits`;
-        }
-      },
+    dateClick(info) {
+      ouvrirNoteForm(null, info.dateStr);
+    },
 
-      datesSet(info) {
-        const date = info.view.currentStart;
-        afficherListeMois(toutes, date, ouvrirModal);
-        updateStats(reservations, date);
-      },
+    datesSet(info) {
+      afficherListeMois(toutes, info.view.currentStart, ouvrirModal);
+      updateStats(reservations, info.view.currentStart);
+    },
 
-      eventClick(info) {
-        ouvrirModal(info.event.extendedProps);
-      }
+    eventClick(info) {
+      ouvrirModal(info.event.extendedProps);
     }
-  );
+  });
 
   calendar.render();
 }
