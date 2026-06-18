@@ -13,6 +13,12 @@ function formatDateFR(dateText) {
   });
 }
 
+function addDaysISO(dateISO, days) {
+  const d = new Date(dateISO + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 function cleanText(value) {
   if (!value) return "";
   return String(value)
@@ -31,9 +37,7 @@ function escapeHtml(value) {
 
 function cleanMoney(value) {
   if (!value) return "";
-  const text = String(value)
-    .replace(/[^\d,.\s]/g, "")
-    .trim();
+  const text = String(value).replace(/[^\d,.\s]/g, "").trim();
   return text ? text + " €" : "";
 }
 
@@ -126,14 +130,17 @@ function isValidIcal(r) {
 /* ── Notes jaunes ─────────────────────────────────────── */
 
 function normalizeNote(n, index) {
+  const start = n.start;
+  const end = n.end || addDaysISO(start, 1);
+
   return {
     type: "note",
-    id: n.id || "note_" + index + "_" + n.start,
+    id: n.id || "note_" + index + "_" + start,
     source: "Note",
     nom: cleanText(n.title || "Note"),
     title: cleanText(n.title || "Note"),
-    start: n.start,
-    end: n.start,
+    start,
+    end,
     description: String(n.description || "")
   };
 }
@@ -153,17 +160,25 @@ async function saveNotes(notes) {
   setTimeout(() => location.reload(), 1500);
 }
 
-function ouvrirNoteForm(note = null, dateISO = null) {
+function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
   const isEdit = !!note;
+
+  const startValue = note?.start || startISO || "";
+  const endValue = note?.end || endISO || addDaysISO(startValue, 1);
 
   document.getElementById("modalContent").innerHTML = `
     <span class="modal-source-tag note">Note jaune</span>
     <div class="modal-name">${isEdit ? "Modifier la note" : "Ajouter une note"}</div>
 
     <div class="modal-grid">
-      <div class="modal-field full">
-        <label>Date</label>
-        <input id="noteDate" type="date" value="${escapeHtml(note?.start || dateISO || "")}" style="width:100%;border:none;background:transparent;font-weight:600">
+      <div class="modal-field">
+        <label>Date début</label>
+        <input id="noteStart" type="date" value="${escapeHtml(startValue)}" style="width:100%;border:none;background:transparent;font-weight:600">
+      </div>
+
+      <div class="modal-field">
+        <label>Date fin</label>
+        <input id="noteEnd" type="date" value="${escapeHtml(endValue)}" style="width:100%;border:none;background:transparent;font-weight:600">
       </div>
 
       <div class="modal-field full">
@@ -181,18 +196,27 @@ function ouvrirNoteForm(note = null, dateISO = null) {
       ${isEdit ? `<button id="deleteNoteBtn" style="background:#fee2e2;color:#991b1b;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer">Supprimer</button>` : ""}
       <button id="saveNoteBtn" style="background:#f2c94c;color:#1e293b;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer">Enregistrer</button>
     </div>
+
+    <p style="font-size:.75rem;color:#64748b;margin-top:10px">
+      Astuce : sur le calendrier, glisse ton doigt ou ta souris sur plusieurs dates pour créer une note sur plusieurs jours.
+    </p>
   `;
 
   document.getElementById("modal").hidden = false;
 
   document.getElementById("saveNoteBtn").onclick = async () => {
-    const start = document.getElementById("noteDate").value;
+    const start = document.getElementById("noteStart").value;
+    let end = document.getElementById("noteEnd").value;
     const title = document.getElementById("noteTitle").value.trim();
     const description = document.getElementById("noteDescription").value.trim();
 
     if (!start || !title) {
-      alert("Date et titre obligatoires.");
+      alert("Date de début et titre obligatoires.");
       return;
+    }
+
+    if (!end || new Date(end) <= new Date(start)) {
+      end = addDaysISO(start, 1);
     }
 
     let notes = [...notesGlobales];
@@ -201,6 +225,7 @@ function ouvrirNoteForm(note = null, dateISO = null) {
       id: note?.id || "note_" + Date.now(),
       title,
       start,
+      end,
       description
     };
 
@@ -313,7 +338,7 @@ function cardReservation(r) {
           <div class="res-name">${escapeHtml(r.nom)}</div>
           <span class="res-source note">Note</span>
         </div>
-        <div class="res-dates">📝 ${formatDateFR(r.start)}</div>
+        <div class="res-dates">📝 ${formatDateFR(r.start)} → ${formatDateFR(r.end)}</div>
         <div class="res-meta"><span>${escapeHtml(r.description || "").split("\n")[0] || "Voir le détail"}</span></div>
       </article>
     `;
@@ -383,6 +408,7 @@ async function chargerCalendrier() {
     id: n.id || "note_" + i + "_" + n.start,
     title: n.title || "Note",
     start: n.start,
+    end: n.end || addDaysISO(n.start, 1),
     description: n.description || ""
   }));
 
@@ -404,7 +430,7 @@ async function chargerCalendrier() {
       return {
         title: "📝 " + r.nom,
         start: r.start,
-        end: r.start,
+        end: r.end,
         allDay: true,
         color: "#f2c94c",
         textColor: "#1e293b",
@@ -437,6 +463,12 @@ async function chargerCalendrier() {
     firstDay: 1,
     height: "auto",
 
+    selectable: true,
+    selectMirror: true,
+    longPressDelay: 300,
+    selectLongPressDelay: 300,
+    unselectAuto: true,
+
     headerToolbar: {
       left: "prev,next today",
       center: "title",
@@ -454,8 +486,12 @@ async function chargerCalendrier() {
 
     events,
 
+    select(info) {
+      ouvrirNoteForm(null, info.startStr, info.endStr);
+    },
+
     dateClick(info) {
-      ouvrirNoteForm(null, info.dateStr);
+      ouvrirNoteForm(null, info.dateStr, addDaysISO(info.dateStr, 1));
     },
 
     datesSet(info) {
