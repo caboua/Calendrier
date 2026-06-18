@@ -68,7 +68,14 @@ async function chargerCalendrier() {
     }));
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: "dayGridMonth",
+     initialView: "dayGridMonth",
+views: {
+  listYear: {
+    type: "list",
+    duration: { years: 1 },
+    buttonText: "Liste année"
+  }
+},
       locale: "fr",
       firstDay: 1,
       height: "auto",
