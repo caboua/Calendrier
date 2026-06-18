@@ -14,6 +14,52 @@ function cleanMoney(value) {
   return text ? text + " €" : "";
 }
 
+function isValidReservation(r) {
+  if (!r.start || !r.end) return false;
+  return new Date(r.end) > new Date(r.start);
+}
+
+async function loadJson(path) {
+  try {
+    const response = await fetch(path + "?v=" + Date.now());
+    if (!response.ok) return [];
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function mergeReservations(details, ical) {
+  const validDetails = details.filter(isValidReservation);
+
+  const merged = [...validDetails];
+
+  ical.forEach(r => {
+    if (!isValidReservation(r)) return;
+
+    const alreadyExists = merged.some(d =>
+      d.start === r.start && d.end === r.end
+    );
+
+    if (!alreadyExists) {
+      merged.push({
+        source: r.source || "Airbnb",
+        nom: "Réservé",
+        start: r.start,
+        end: r.end,
+        voyageurs: "",
+        code: "",
+        total_paye: "",
+        vous_gagnez: "",
+        nuits: Math.round((new Date(r.end) - new Date(r.start)) / 86400000)
+      });
+    }
+  });
+
+  return merged.sort((a, b) => a.start.localeCompare(b.start));
+}
+
 function afficherReservationsDuMois(reservations, calendarDate) {
   const container = document.getElementById("monthReservations");
   if (!container) return;
@@ -22,7 +68,6 @@ function afficherReservationsDuMois(reservations, calendarDate) {
   const year = calendarDate.getFullYear();
 
   const list = reservations.filter(r => {
-    if (!r.start) return false;
     const start = new Date(r.start + "T00:00:00");
     return start.getMonth() === month && start.getFullYear() === year;
   });
@@ -47,78 +92,73 @@ async function chargerCalendrier() {
   const lastUpdate = document.getElementById("lastUpdate");
   const calendarEl = document.getElementById("calendar");
 
-  try {
-    const response = await fetch("./data/reservations_details.json?v=" + Date.now());
-    let reservations = await response.json();
+  const details = await loadJson("./data/reservations_details.json");
+  const ical = await loadJson("./data/reservations.json");
 
-    if (!Array.isArray(reservations) || reservations.length === 0) {
-      const fallback = await fetch("./data/reservations.json?v=" + Date.now());
-      reservations = await fallback.json();
-    }
+  const reservations = mergeReservations(details, ical);
 
-    lastUpdate.textContent = "Calendrier synchronisé avec Airbnb et Booking.";
+  lastUpdate.textContent = "Calendrier synchronisé avec Airbnb et Booking.";
 
-    const events = reservations.map(r => ({
-      title: r.nom ? r.nom : "Réservé",
-      start: r.start,
-      end: r.end,
-      allDay: true,
-      color: r.source === "Booking" ? "#0071c2" : "#ff5a5f",
-      extendedProps: r
-    }));
+  const events = reservations.map(r => ({
+    title: r.nom && r.nom !== "Réservé" ? r.nom : "Réservé",
+    start: r.start,
+    end: r.end,
+    allDay: true,
+    color: r.source === "Booking" ? "#0071c2" : "#ff5a5f",
+    extendedProps: r
+  }));
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-     initialView: "dayGridMonth",
-views: {
-  listYear: {
-    type: "list",
-    duration: { years: 1 },
-    buttonText: "Liste année"
-  }
-},
-      locale: "fr",
-      firstDay: 1,
-      height: "auto",
-      headerToolbar: {
-        left: "prev,next today",
-        center: "title",
-      right: "dayGridMonth,listYear"
-      },
-      buttonText: {
-        today: "Aujourd'hui",
-        month: "Mois",
-       list: "Liste année"
-      },
-      events,
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: "dayGridMonth",
+    locale: "fr",
+    firstDay: 1,
+    height: "auto",
 
-      datesSet: function(info) {
-        afficherReservationsDuMois(reservations, info.view.currentStart);
-      },
-
-      eventClick: function(info) {
-        const r = info.event.extendedProps;
-
-        alert(
-          "Détail de la réservation\n\n" +
-          "Plateforme : " + cleanText(r.source) + "\n\n" +
-          "Nom : " + cleanText(r.nom) + "\n\n" +
-          "Arrivée : " + formatDateFR(r.start) + "\n" +
-          "Départ : " + formatDateFR(r.end) + "\n" +
-          "Nombre de nuits : " + cleanText(r.nuits) + "\n\n" +
-          "Voyageurs : " + cleanText(r.voyageurs) + "\n\n" +
-          "Code : " + cleanText(r.code) + "\n\n" +
-          "Total payé : " + cleanMoney(r.total_paye) + "\n\n" +
-          "Vous gagnez : " + cleanMoney(r.vous_gagnez)
-        );
+    views: {
+      listYear: {
+        type: "list",
+        duration: { years: 1 },
+        buttonText: "Liste année"
       }
-    });
+    },
 
-    calendar.render();
+    headerToolbar: {
+      left: "prev,next today",
+      center: "title",
+      right: "dayGridMonth,listYear"
+    },
 
-  } catch (e) {
-    lastUpdate.textContent = "Erreur de chargement du calendrier.";
-    console.error(e);
-  }
+    buttonText: {
+      today: "Aujourd'hui",
+      month: "Mois",
+      list: "Liste année"
+    },
+
+    events,
+
+    datesSet: function(info) {
+      afficherReservationsDuMois(reservations, info.view.currentStart);
+    },
+
+    eventClick: function(info) {
+      const r = info.event.extendedProps;
+
+      alert(
+        "Détail de la réservation\n\n" +
+        "Plateforme : " + cleanText(r.source) + "\n\n" +
+        "Nom : " + (cleanText(r.nom) || "Non disponible") + "\n\n" +
+        "Arrivée : " + formatDateFR(r.start) + "\n" +
+        "Départ : " + formatDateFR(r.end) + "\n" +
+        "Nombre de nuits : " + cleanText(r.nuits) + "\n\n" +
+        "Voyageurs : " + (cleanText(r.voyageurs) || "Non disponible") + "\n\n" +
+        "Code : " + (cleanText(r.code) || "Non disponible") + "\n\n" +
+        "Total payé : " + (cleanMoney(r.total_paye) || "Non disponible") + "\n\n" +
+        "Vous gagnez : " + (cleanMoney(r.vous_gagnez) || "Non disponible")
+      );
+    }
+  });
+
+  calendar.render();
 }
 
 chargerCalendrier();
