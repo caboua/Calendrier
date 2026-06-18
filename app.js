@@ -454,11 +454,10 @@ async function chargerCalendrier() {
     };
   });
 
-  const initDate = toutes.find(r => isCurrentOrFuture(r))?.start;
-
+  
   const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
     initialView: "dayGridMonth",
-    initialDate: initDate || new Date().toISOString().slice(0, 10),
+    initialDate: new Date().toISOString().slice(0, 10),
     locale: "fr",
     firstDay: 1,
     height: "auto",
