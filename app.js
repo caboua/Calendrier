@@ -82,12 +82,12 @@ views: {
       headerToolbar: {
         left: "prev,next today",
         center: "title",
-        right: "dayGridMonth,listMonth"
+      right: "dayGridMonth,listYear"
       },
       buttonText: {
         today: "Aujourd'hui",
         month: "Mois",
-        list: "Liste"
+       list: "Liste année"
       },
       events,
 
