@@ -45,7 +45,11 @@ jobs:
                 if (event.type === "VEVENT" && event.start && event.end) {
                   reservations.push({
                     source: cal.source,
-                    title: "Réservé",
+                    title: event.summary || "Réservé",
+                    summary: event.summary || "",
+                    description: event.description || "",
+                    location: event.location || "",
+                    uid: event.uid || "",
                     start: event.start.toISOString().split("T")[0],
                     end: event.end.toISOString().split("T")[0]
                   });

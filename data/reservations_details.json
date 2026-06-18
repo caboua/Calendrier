@@ -82,5 +82,16 @@
     "vous_gagnez": "325,26 ?",
     "nuits": 2,
     "sujet": "R?servation confirm?e?: Fanny Virassamy arrive le 10 juil."
+  },
+  {
+    "source": "Manuel",
+    "nom": "Natacha",
+    "start": "2026-07-18",
+    "end": "2026-07-20",
+    "voyageurs": "",
+    "total_paye": "",
+    "vous_gagnez": "",
+    "nuits": 2,
+    "sujet": "Réservation ajoutée manuellement"
   }
 ]
