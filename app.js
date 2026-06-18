@@ -166,6 +166,7 @@ async function chargerCalendrier() {
 
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
+    initialDate: reservations.length ? reservations[0].start : undefined,
     locale: "fr",
     firstDay: 1,
     height: "auto",
