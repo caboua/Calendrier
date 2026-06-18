@@ -1,43 +1,71 @@
 [
   {
     "source": "Airbnb",
-    "title": "Réservé",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-94f4bb99a4ef4d4eba82b021a5534f9a@airbnb.com",
     "start": "2026-07-09",
     "end": "2026-07-10"
   },
   {
     "source": "Airbnb",
-    "title": "Réservé",
+    "title": "Reserved",
+    "summary": "Reserved",
+    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMXZ4EJYQK\nPhone Number (Last 4 Digits): 9506",
+    "location": "",
+    "uid": "1418fb94e984-ee3d31f7e6405e0dbf2b7a5027bfaea5@airbnb.com",
     "start": "2026-07-10",
     "end": "2026-07-12"
   },
   {
     "source": "Airbnb",
-    "title": "Réservé",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-14158d45727526145ef514139eeb669e@airbnb.com",
     "start": "2026-07-12",
     "end": "2026-07-13"
   },
   {
     "source": "Airbnb",
-    "title": "Réservé",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-e1ca6827c158724300a90956b6ba3286@airbnb.com",
     "start": "2026-07-17",
     "end": "2026-07-18"
   },
   {
     "source": "Airbnb",
-    "title": "Réservé",
+    "title": "Reserved",
+    "summary": "Reserved",
+    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMQH58XXQA\nPhone Number (Last 4 Digits): 6737",
+    "location": "",
+    "uid": "1418fb94e984-7fc4267149d6dcca730805cdb1117e3d@airbnb.com",
     "start": "2026-07-18",
     "end": "2026-07-20"
   },
   {
     "source": "Airbnb",
-    "title": "Réservé",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-3efe4bf19de852e6d576009d86c39f65@airbnb.com",
     "start": "2026-12-03",
     "end": "2026-12-19"
   },
   {
     "source": "Booking",
-    "title": "Réservé",
+    "title": "CLOSED - Not available",
+    "summary": "CLOSED - Not available",
+    "description": "",
+    "location": "",
+    "uid": "bac8fecd218b2919f3e5a5b65a9c0061@booking.com",
     "start": "2026-12-05",
     "end": "2026-12-18"
   }
