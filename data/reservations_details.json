@@ -94,5 +94,17 @@
     "vous_gagnez": "344,35 €",
     "nuits": 2,
     "sujet": "Réservation confirmée : Natacha Couinedic arrive le 18 juil."
+  },
+  {
+    "source": "Booking",
+    "nom": "François Casas",
+    "start": "2026-12-05",
+    "end": "2026-12-18",
+    "voyageurs": "3 adultes",
+    "code": "5647275875",
+    "total_paye": "1748,49 €",
+    "vous_gagnez": "1474,80 €",
+    "nuits": 13,
+    "sujet": "Réservation Booking.com - François Casas arrive le 5 déc."
   }
 ]
