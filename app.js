@@ -15,6 +15,13 @@ function cleanText(value) {
     .trim();
 }
 
+function cleanMultiline(value) {
+  if (!value) return "";
+  return String(value)
+    .replace(/[^a-zA-ZÀ-ÿ0-9 '\-.,€\n]/g, "")
+    .trim();
+}
+
 function cleanMoney(value) {
   if (!value) return "";
   const text = String(value)
@@ -24,7 +31,7 @@ function cleanMoney(value) {
 }
 
 function escapeHtml(value) {
-  return String(cleanText(value) || "")
+  return String(value || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -39,15 +46,27 @@ function countNights(start, end) {
 function normalizeReservation(r) {
   const nuits = r.nuits || countNights(r.start, r.end);
   return {
-    source:       r.source || "Airbnb",
-    nom:          cleanText(r.nom || ""),
-    start:        r.start,
-    end:          r.end,
-    voyageurs:    cleanText(r.voyageurs || ""),
-    code:         r.code || "",
-    total_paye:   r.total_paye || "",
-    vous_gagnez:  r.vous_gagnez || "",
-    nuits:        nuits
+    type: "reservation",
+    source: r.source || "Airbnb",
+    nom: cleanText(r.nom || ""),
+    start: r.start,
+    end: r.end,
+    voyageurs: cleanText(r.voyageurs || ""),
+    code: r.code || "",
+    total_paye: r.total_paye || "",
+    vous_gagnez: r.vous_gagnez || "",
+    nuits: nuits
+  };
+}
+
+function normalizeNote(n) {
+  return {
+    type: "note",
+    source: "Note",
+    nom: cleanText(n.title || "Note"),
+    start: n.start,
+    end: n.end || n.start,
+    description: cleanMultiline(n.description || "")
   };
 }
 
@@ -55,38 +74,43 @@ function isValidReservation(r) {
   return r.start && r.end && new Date(r.end) > new Date(r.start) && r.nom;
 }
 
+function isValidNote(n) {
+  return n.start && n.nom;
+}
+
 function isCurrentOrFuture(r) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return new Date(r.end + "T00:00:00") >= today;
+  const end = r.end || r.start;
+  return new Date(end + "T00:00:00") >= today;
 }
 
 function overlapsMonth(r, date) {
   const ms = new Date(date.getFullYear(), date.getMonth(), 1);
   const me = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-  return new Date(r.start + "T00:00:00") < me
-      && new Date(r.end   + "T00:00:00") > ms;
+  const start = new Date(r.start + "T00:00:00");
+  const end = new Date((r.end || r.start) + "T00:00:00");
+  return start < me && end >= ms;
 }
 
-/* Deux séjours partagent-ils au moins une nuit ? */
 function overlaps(a, b) {
   return new Date(a.start + "T00:00:00") < new Date(b.end + "T00:00:00")
-      && new Date(a.end   + "T00:00:00") > new Date(b.start + "T00:00:00");
+      && new Date(a.end + "T00:00:00") > new Date(b.start + "T00:00:00");
 }
 
-/* Réservation Booking issue de l'iCal : on ne connaît que les dates. */
 function normalizeIcalBooking(r) {
   return {
-    source:      "Booking",
-    nom:         "",                 // inconnu via iCal
-    start:       r.start,
-    end:         r.end,
-    voyageurs:   "",
-    code:        r.uid || "",
-    total_paye:  "",
+    type: "reservation",
+    source: "Booking",
+    nom: "",
+    start: r.start,
+    end: r.end,
+    voyageurs: "",
+    code: r.uid || "",
+    total_paye: "",
     vous_gagnez: "",
-    nuits:       countNights(r.start, r.end),
-    aCompleter:  true                // dates seules, à enrichir
+    nuits: countNights(r.start, r.end),
+    aCompleter: true
   };
 }
 
@@ -100,7 +124,9 @@ async function loadJson(path) {
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : [];
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 /* ── Stats ────────────────────────────────────────────── */
@@ -118,26 +144,45 @@ function formatEuros(n) {
 function updateStats(reservations, calendarDate) {
   const year = calendarDate.getFullYear();
 
-  const duMois   = reservations.filter(r => overlapsMonth(r, calendarDate));
-  const delannee = reservations.filter(r =>
-    new Date(r.start + "T00:00:00").getFullYear() === year ||
-    new Date(r.end   + "T00:00:00").getFullYear() === year
-  );
+  const duMois = reservations.filter(r => overlapsMonth(r, calendarDate));
+  const deJanvierAuMoisActuel = reservations.filter(r => {
+    const d = new Date(r.start + "T00:00:00");
+    return d.getFullYear() === year && d.getMonth() <= calendarDate.getMonth();
+  });
 
-  const nuitsMois    = duMois.reduce((s, r) => s + r.nuits, 0);
-  const revenuMois   = duMois.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0);
-  const nuitsAnnee   = delannee.reduce((s, r) => s + r.nuits, 0);
-  const revenuAnnee  = delannee.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0);
+  const nuitsMois = duMois.reduce((s, r) => s + r.nuits, 0);
+  const revenuMois = duMois.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0);
+  const nuitsAnnee = deJanvierAuMoisActuel.reduce((s, r) => s + r.nuits, 0);
+  const revenuAnnee = deJanvierAuMoisActuel.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0);
 
-  document.getElementById("statNuitsMois").textContent    = nuitsMois || "0";
-  document.getElementById("statRevenuMois").textContent   = formatEuros(revenuMois);
-  document.getElementById("statNuitsAnnee").textContent   = nuitsAnnee || "0";
-  document.getElementById("statRevenuAnnee").textContent  = formatEuros(revenuAnnee);
+  document.getElementById("statNuitsMois").textContent = nuitsMois || "0";
+  document.getElementById("statRevenuMois").textContent = formatEuros(revenuMois);
+  document.getElementById("statNuitsAnnee").textContent = nuitsAnnee || "0";
+  document.getElementById("statRevenuAnnee").textContent = formatEuros(revenuAnnee);
 }
 
 /* ── Modal ────────────────────────────────────────────── */
 
 function ouvrirModal(r) {
+  if (r.type === "note") {
+    document.getElementById("modalContent").innerHTML = `
+      <span class="modal-source-tag note">Note</span>
+      <div class="modal-name">${escapeHtml(r.nom || "Note")}</div>
+      <div class="modal-grid">
+        <div class="modal-field full">
+          <label>Date</label>
+          <span>${formatDateFR(r.start)}</span>
+        </div>
+        <div class="modal-field full">
+          <label>Informations</label>
+          <span style="white-space:pre-line">${escapeHtml(r.description || "—")}</span>
+        </div>
+      </div>
+    `;
+    document.getElementById("modal").hidden = false;
+    return;
+  }
+
   const src = (r.source || "Airbnb").toLowerCase();
   const srcLabel = r.source || "Airbnb";
   const nuits = r.nuits || countNights(r.start, r.end);
@@ -173,7 +218,7 @@ function ouvrirModal(r) {
       </div>
       ${r.code && !todo ? `<div class="modal-field full"><label>Code réservation</label><span>${escapeHtml(r.code)}</span></div>` : ""}
     </div>
-    ${todo ? `<div class="modal-note">ℹ️ Réservation Booking synchronisée automatiquement (dates seules). Pour le nom et le montant, ouvre la réservation sur l'extranet Booking et transmets-la.</div>` : ""}
+    ${todo ? `<div class="modal-note">ℹ️ Réservation Booking synchronisée automatiquement, dates seules.</div>` : ""}
     ${r.code && !todo ? `<div class="modal-code">Référence : ${escapeHtml(r.code)}</div>` : ""}
   `;
   document.getElementById("modal").hidden = false;
@@ -191,33 +236,49 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") fermerModal();
 });
 
-/* ── Sidebar (liste du mois) ──────────────────────────── */
+/* ── Sidebar ──────────────────────────────────────────── */
 
-function sourceClass(source) {
+function sourceClass(source, type) {
+  if (type === "note") return "note";
   const s = (source || "").toLowerCase();
   if (s === "booking") return "booking";
-  if (s === "manuel")  return "manuel";
+  if (s === "manuel") return "manuel";
   return "airbnb";
 }
 
 function cleKey(r) {
-  return r.code || r.nom || (r.start + "_" + r.end);
+  return r.code || r.nom || (r.start + "_" + (r.end || r.start));
 }
 
 function cardReservation(r) {
-  const sc = sourceClass(r.source);
+  const sc = sourceClass(r.source, r.type);
+
+  if (r.type === "note") {
+    return `
+      <article class="reservation-item note" data-key="${escapeHtml(cleKey(r))}">
+        <div class="res-header">
+          <div class="res-name">${escapeHtml(r.nom)}</div>
+          <span class="res-source note">Note</span>
+        </div>
+        <div class="res-dates">📝 ${formatDateFR(r.start)}</div>
+        <div class="res-meta">
+          <span>${escapeHtml(r.description || "").split("\n")[0] || "Voir le détail"}</span>
+        </div>
+      </article>
+    `;
+  }
+
   const nuits = r.nuits || countNights(r.start, r.end);
   const todo = r.aCompleter || !r.nom;
   const nom = r.nom || "Réservation Booking";
+
   return `
     <article class="reservation-item ${sc}${todo ? " acompleter" : ""}" data-key="${escapeHtml(cleKey(r))}">
       <div class="res-header">
         <div class="res-name">${escapeHtml(nom)}</div>
         <span class="res-source ${sc}">${escapeHtml(r.source || "Airbnb")}</span>
       </div>
-      <div class="res-dates">
-        📅 ${formatDateFR(r.start)} → ${formatDateFR(r.end)}
-      </div>
+      <div class="res-dates">📅 ${formatDateFR(r.start)} → ${formatDateFR(r.end)}</div>
       <div class="res-meta">
         <span>🌙 ${nuits} nuit${nuits > 1 ? "s" : ""}</span>
         ${r.voyageurs ? `<span>👥 ${escapeHtml(r.voyageurs)}</span>` : ""}
@@ -228,14 +289,15 @@ function cardReservation(r) {
   `;
 }
 
-function afficherListeMois(reservations, calendarDate, onClickRes) {
+function afficherListeMois(items, calendarDate, onClickRes) {
   const container = document.getElementById("monthReservations");
   const monthName = calendarDate.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
   document.getElementById("monthTitle").textContent = `Réservations — ${monthName}`;
 
-  const list = reservations.filter(r => overlapsMonth(r, calendarDate));
+  const list = items.filter(r => overlapsMonth(r, calendarDate));
+
   if (list.length === 0) {
-    container.innerHTML = `<div class="empty-state">🏖️<br>Aucune réservation ce mois.</div>`;
+    container.innerHTML = `<div class="empty-state">🏖️<br>Aucune réservation ou note ce mois.</div>`;
     return;
   }
 
@@ -250,16 +312,13 @@ function afficherListeMois(reservations, calendarDate, onClickRes) {
 /* ── Init calendrier ──────────────────────────────────── */
 
 async function chargerCalendrier() {
-  const details      = await loadJson("./data/reservations_details.json");
+  const details = await loadJson("./data/reservations_details.json");
   const reservations = details
     .map(normalizeReservation)
     .filter(isValidReservation)
     .filter(isCurrentOrFuture)
     .sort((a, b) => a.start.localeCompare(b.start));
 
-  // Réservations Booking issues de l'iCal (dates seules). On affiche celles
-  // qui n'ont PAS encore de fiche détaillée, pour qu'une nouvelle résa
-  // apparaisse toute seule. Le nom/prix se complètent manuellement ensuite.
   const bloque = await loadJson("./data/reservations.json");
   const bookingAuto = bloque
     .filter(r => (r.source || "").toLowerCase() === "booking")
@@ -268,25 +327,47 @@ async function chargerCalendrier() {
     .filter(isCurrentOrFuture)
     .filter(g => !reservations.some(r => overlaps(r, g)));
 
-  const toutes = reservations.concat(bookingAuto)
+  const notesJson = await loadJson("./data/notes.json");
+  const notes = notesJson
+    .map(normalizeNote)
+    .filter(isValidNote)
+    .filter(isCurrentOrFuture);
+
+  const toutes = reservations
+    .concat(bookingAuto)
+    .concat(notes)
     .sort((a, b) => a.start.localeCompare(b.start));
 
   const lastUpdate = document.getElementById("lastUpdate");
   lastUpdate.textContent = toutes.length
-    ? `${toutes.length} réservation${toutes.length > 1 ? "s" : ""} chargée${toutes.length > 1 ? "s" : ""}`
+    ? `${toutes.length} élément${toutes.length > 1 ? "s" : ""} chargé${toutes.length > 1 ? "s" : ""}`
     : "Aucune réservation à venir.";
 
   const events = toutes.map(r => {
-    const sc = sourceClass(r.source);
+    if (r.type === "note") {
+      return {
+        title: "📝 " + r.nom,
+        start: r.start,
+        end: r.start,
+        allDay: true,
+        color: "#f2c94c",
+        textColor: "#1e293b",
+        display: "block",
+        extendedProps: r
+      };
+    }
+
+    const sc = sourceClass(r.source, r.type);
     const colors = { airbnb: "#ff5a5f", booking: "#0071c2", manuel: "#7c3aed" };
+
     return {
-      title:         r.aCompleter ? "Booking — à compléter" : r.nom,
-      start:         r.start,
-      end:           r.end,
-      allDay:        true,
-      color:         colors[sc] || "#ff5a5f",
-      display:       "block",
-      classNames:    r.aCompleter ? ["fc-acompleter"] : [],
+      title: r.aCompleter ? "Booking — à compléter" : r.nom,
+      start: r.start,
+      end: r.end,
+      allDay: true,
+      color: colors[sc] || "#ff5a5f",
+      display: "block",
+      classNames: r.aCompleter ? ["fc-acompleter"] : [],
       extendedProps: r
     };
   });
@@ -296,16 +377,16 @@ async function chargerCalendrier() {
   const calendar = new FullCalendar.Calendar(
     document.getElementById("calendar"),
     {
-      initialView:  "dayGridMonth",
-      initialDate:  initDate || new Date().toISOString().slice(0, 10),
-      locale:       "fr",
-      firstDay:     1,
-      height:       "auto",
+      initialView: "dayGridMonth",
+      initialDate: initDate || new Date().toISOString().slice(0, 10),
+      locale: "fr",
+      firstDay: 1,
+      height: "auto",
 
       headerToolbar: {
-        left:   "prev,next today",
+        left: "prev,next today",
         center: "title",
-        right:  "dayGridMonth,listYear"
+        right: "dayGridMonth,listYear"
       },
 
       views: {
@@ -320,14 +401,18 @@ async function chargerCalendrier() {
       events,
 
       eventDidMount(info) {
-        const nuits = info.event.extendedProps.nuits;
-        if (nuits > 1) info.el.title = `${info.event.title} — ${nuits} nuits`;
+        const r = info.event.extendedProps;
+        if (r.type === "note") {
+          info.el.title = r.description || r.nom;
+        } else if (r.nuits > 1) {
+          info.el.title = `${info.event.title} — ${r.nuits} nuits`;
+        }
       },
 
       datesSet(info) {
         const date = info.view.currentStart;
         afficherListeMois(toutes, date, ouvrirModal);
-        updateStats(toutes, date);
+        updateStats(reservations, date);
       },
 
       eventClick(info) {
