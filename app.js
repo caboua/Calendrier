@@ -72,6 +72,11 @@ async function chargerCalendrier() {
     });
 
     calendar.render();
+    afficherReservationsDuMois(reservations, calendar.getDate());
+
+calendar.on("datesSet", function() {
+  afficherReservationsDuMois(reservations, calendar.getDate());
+});
 
   } catch (e) {
     lastUpdate.textContent = "Erreur de chargement du calendrier.";
