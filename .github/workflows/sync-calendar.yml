@@ -16,68 +16,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Install dependencies
-        run: npm install node-ical
+        run: npm ci
 
-      - name: Sync Airbnb and Booking calendars
-        run: |
-          mkdir -p data
-          node <<'EOF'
-          const ical = require("node-ical");
-          const fs = require("fs");
-
-          const calendars = [
-            { source: "Airbnb", url: process.env.AIRBNB_ICAL_URL },
-            { source: "Booking", url: process.env.BOOKING_ICAL_URL }
-          ];
-
-          async function main() {
-            const reservations = [];
-
-            for (const cal of calendars) {
-              if (!cal.url) continue;
-
-              const events = await ical.async.fromURL(cal.url);
-
-              for (const key in events) {
-                const event = events[key];
-
-                if (event.type === "VEVENT" && event.start && event.end) {
-                  reservations.push({
-                    source: cal.source,
-                    title: event.summary || "Réservé",
-                    summary: event.summary || "",
-                    description: event.description || "",
-                    location: event.location || "",
-                    uid: event.uid || "",
-                    start: event.start.toISOString().split("T")[0],
-                    end: event.end.toISOString().split("T")[0]
-                  });
-                }
-              }
-            }
-
-            reservations.sort((a, b) => a.start.localeCompare(b.start));
-
-            fs.writeFileSync(
-              "data/reservations.json",
-              JSON.stringify(reservations, null, 2)
-            );
-          }
-
-          main().catch(error => {
-            console.error(error);
-            process.exit(1);
-          });
-          EOF
+      - name: Sync Airbnb and Booking iCal calendars
+        run: npm run sync:ical
         env:
           AIRBNB_ICAL_URL: ${{ secrets.AIRBNB_ICAL_URL }}
           BOOKING_ICAL_URL: ${{ secrets.BOOKING_ICAL_URL }}
+
+      - name: Sync Airbnb reservation details from Gmail
+        run: npm run sync:gmail
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          GMAIL_SINCE: "2026-01-01T00:00:00Z"
 
       - name: Commit updated reservations
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add data/reservations.json
+          git add data/reservations.json data/reservations_details.json
           git commit -m "Update reservations" || echo "No changes"
           git push

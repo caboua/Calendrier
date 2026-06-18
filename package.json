@@ -1,0 +1,15 @@
+{
+  "name": "calendrier-caboua",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "sync:ical": "node scripts/sync-ical.js",
+    "sync:gmail": "node scripts/sync-airbnb-gmail.js"
+  },
+  "dependencies": {
+    "imapflow": "^1.0.191",
+    "mailparser": "^3.7.2",
+    "node-ical": "^0.26.1"
+  }
+}
