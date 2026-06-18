@@ -432,3 +432,17 @@ footer {
   .stat-value { font-size: 1.1rem; }
   .modal-card { padding: 20px; }
 }
+.reservation-item.note {
+  border-left-color: #f2c94c;
+  background: #fffbeb;
+}
+
+.res-source.note {
+  background: #f2c94c;
+  color: #1e293b;
+}
+
+.modal-source-tag.note {
+  background: #f2c94c;
+  color: #1e293b;
+}
