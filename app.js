@@ -456,6 +456,8 @@ async function chargerCalendrier() {
 
   
   const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+    fixedWeekCount: false,
+showNonCurrentDates: false,
     initialView: "dayGridMonth",
     initialDate: new Date().toISOString().slice(0, 10),
     locale: "fr",
