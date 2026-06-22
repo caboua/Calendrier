@@ -28,72 +28,84 @@
     "nom": "Karine Pauchet",
     "start": "2026-04-15",
     "end": "2026-04-20",
-    "voyageurs": "6 adultes",
+    "voyageurs": "6 adultes",
     "code": "HMKSQPBHDJ",
-    "total_paye": "856,90 ?",
-    "vous_gagnez": "684,82 ?",
+    "total_paye": "856,90 €",
+    "vous_gagnez": "684,82 €",
     "nuits": 5,
-    "sujet": "R?servation confirm?e?: Karine Pauchet arrive le 15 avr."
+    "sujet": "Réservation confirmée : Karine Pauchet arrive le 15 avr."
   },
   {
     "source": "Airbnb",
     "nom": "Julie Lottin",
     "start": "2026-04-22",
     "end": "2026-04-26",
-    "voyageurs": "1 adultes",
+    "voyageurs": "1 adulte",
     "code": "HMJJ8234YH",
-    "total_paye": "703,61 ?",
-    "vous_gagnez": "570,36 ?",
+    "total_paye": "703,61 €",
+    "vous_gagnez": "570,36 €",
     "nuits": 4,
-    "sujet": "R?servation confirm?e?: Julie Lottin arrive le 22 avr."
+    "sujet": "Réservation confirmée : Julie Lottin arrive le 22 avr."
   },
   {
     "source": "Airbnb",
     "nom": "Ludmina Delta-Karat",
     "start": "2026-04-30",
     "end": "2026-05-03",
-    "voyageurs": "2 adultes",
+    "voyageurs": "2 adultes, 1 bébé",
     "code": "HMTEBXBNN8",
-    "total_paye": "436,24 ?",
-    "vous_gagnez": "358,90 ?",
+    "total_paye": "436,24 €",
+    "vous_gagnez": "358,90 €",
     "nuits": 3,
-    "sujet": "R?servation confirm?e?: Ludmina Delta-Karat arrive le 30 avr."
+    "sujet": "Réservation confirmée : Ludmina Delta-Karat arrive le 30 avr."
   },
   {
     "source": "Airbnb",
     "nom": "Nansly Durimel",
     "start": "2026-05-23",
     "end": "2026-05-24",
-    "voyageurs": "1 adultes",
+    "voyageurs": "1 adulte",
     "code": "HMHYQMZBC4",
-    "total_paye": "134,09 ?",
-    "vous_gagnez": "110,58 ?",
+    "total_paye": "134,09 €",
+    "vous_gagnez": "110,58 €",
     "nuits": 1,
-    "sujet": "R?servation confirm?e?: Nansly Durimel arrive le 23 mai"
+    "sujet": "Réservation confirmée : Nansly Durimel arrive le 23 mai"
   },
   {
     "source": "Airbnb",
     "nom": "Fanny Virassamy",
     "start": "2026-07-10",
     "end": "2026-07-12",
-    "voyageurs": "5 adultes",
+    "voyageurs": "5 adultes",
     "code": "HMXZ4EJYQK",
-    "total_paye": "397,93 ?",
-    "vous_gagnez": "325,26 ?",
+    "total_paye": "397,93 €",
+    "vous_gagnez": "325,26 €",
     "nuits": 2,
-    "sujet": "R?servation confirm?e?: Fanny Virassamy arrive le 10 juil."
+    "sujet": "Réservation confirmée : Fanny Virassamy arrive le 10 juil."
   },
   {
-    "source": "Manuel",
+    "source": "Airbnb",
     "nom": "Natacha Couinedic",
     "start": "2026-07-18",
     "end": "2026-07-20",
-    "voyageurs": "5 adultes",
+    "voyageurs": "5 adultes",
     "code": "HMQH58XXQA",
     "total_paye": "421,37 €",
     "vous_gagnez": "344,35 €",
     "nuits": 2,
-    "sujet": "Réservation confirmée : Natacha Couinedic arrive le 18 juil."
+    "sujet": "Réservation confirmée : Natacha Couinedic@Hotmail.Com arrive le 18 juil."
+  },
+  {
+    "source": "Airbnb",
+    "nom": "Mina Miminne",
+    "start": "2026-08-03",
+    "end": "2026-08-10",
+    "voyageurs": "5 adultes, 1 enfant, 1 bébé",
+    "code": "HM4ZP2K5KN",
+    "total_paye": "1320,93 €",
+    "vous_gagnez": "1084,94 €",
+    "nuits": 7,
+    "sujet": "Réservation confirmée : Mina Miminne arrive le 3 août"
   },
   {
     "source": "Booking",
