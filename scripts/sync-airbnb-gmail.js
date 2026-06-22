@@ -82,12 +82,15 @@ function findLineAfter(lines, label, predicate = value => value) {
   const normalizedLabel = normalizeText(label).toLowerCase();
   const index = lines.findIndex(line => {
     const normalizedLine = normalizeText(line).toLowerCase();
-    return normalizedLine === normalizedLabel || normalizedLine.startsWith(normalizedLabel + ":");
+    return normalizedLine === normalizedLabel || normalizedLine.startsWith(normalizedLabel);
   });
   if (index < 0) return "";
 
-  const inlineValue = lines[index].replace(/^[^:]+:\s*/, "").trim();
-  if (inlineValue !== lines[index] && predicate(inlineValue)) return inlineValue;
+  const inlineValue = lines[index]
+    .slice(label.length)
+    .replace(/^\s*[:—-]?\s*/, "")
+    .trim();
+  if (inlineValue && predicate(inlineValue)) return inlineValue;
 
   for (let i = index + 1; i < Math.min(lines.length, index + 8); i += 1) {
     if (predicate(lines[i])) return lines[i];

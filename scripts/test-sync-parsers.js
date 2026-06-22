@@ -31,20 +31,12 @@ const mina = parseAirbnbEmail({
   date: new Date("2026-06-19T23:55:17Z"),
   text: `
 Nouvelle réservation confirmée ! Mina arrive le 3 août
-Arrivée
-lun. 3 août
-16:00
-Départ
-lun. 10 août
-10:00
-Voyageurs
-5 adultes, 1 enfant, 1 bébé
-Code de confirmation
-HM4ZP2K5KN
-Total (EUR)
-1 320,93 €
-Vous gagnez
-1 084,94 €
+Arrivée lun. 3 août 16:00
+Départ lun. 10 août 10:00
+Voyageurs 5 adultes, 1 enfant, 1 bébé
+Code de confirmation HM4ZP2K5KN
+Total (EUR) 1 320,93 €
+Vous gagnez 1 084,94 €
 `
 });
 
