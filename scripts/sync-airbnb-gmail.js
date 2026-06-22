@@ -97,7 +97,7 @@ function findLineAfter(lines, label, predicate = value => value) {
 }
 
 function findMoneyAfter(lines, label) {
-  const moneyPattern = /-?\d+(?:[.,]\d{2})?\s*€/;
+  const moneyPattern = /-?\d[\d\s\u00a0\u202f]*(?:[.,]\d{2})?\s*€/;
   return findLineAfter(lines, label, value => moneyPattern.test(value));
 }
 
@@ -114,8 +114,9 @@ function cleanName(subject, body) {
 }
 
 function cleanMoney(value) {
-  const match = String(value || "").match(/-?\d+(?:[.,]\d{2})?\s*€/);
-  return match ? match[0].replace(/\s+/g, " ") : "";
+  const compact = String(value || "").replace(/[\s\u00a0\u202f]/g, "");
+  const match = compact.match(/-?\d+(?:[.,]\d{2})?€/);
+  return match ? match[0].replace("€", "") + " €" : "";
 }
 
 function parseAirbnbEmail(parsed) {

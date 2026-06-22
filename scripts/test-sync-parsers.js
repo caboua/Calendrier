@@ -26,6 +26,35 @@ assert.equal(airbnb.start, "2026-07-18");
 assert.equal(airbnb.voyageurs, "5 adultes");
 assert.equal(airbnb.total_paye, "421,37 €");
 
+const mina = parseAirbnbEmail({
+  subject: "Réservation confirmée : Mina Miminne arrive le 3 août",
+  date: new Date("2026-06-19T23:55:17Z"),
+  text: `
+Nouvelle réservation confirmée ! Mina arrive le 3 août
+Arrivée
+lun. 3 août
+16:00
+Départ
+lun. 10 août
+10:00
+Voyageurs
+5 adultes, 1 enfant, 1 bébé
+Code de confirmation
+HM4ZP2K5KN
+Total (EUR)
+1 320,93 €
+Vous gagnez
+1 084,94 €
+`
+});
+
+assert.equal(mina.nom, "Mina Miminne");
+assert.equal(mina.start, "2026-08-03");
+assert.equal(mina.end, "2026-08-10");
+assert.equal(mina.voyageurs, "5 adultes, 1 enfant, 1 bébé");
+assert.equal(mina.total_paye, "1320,93 €");
+assert.equal(mina.vous_gagnez, "1084,94 €");
+
 const booking = parseBookingEmail({
   subject: "Réservation Booking.com - François Casas arrive le 5 déc.",
   date: new Date("2026-06-01T00:00:00Z"),
