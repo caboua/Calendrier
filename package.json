@@ -5,7 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "sync:ical": "node scripts/sync-ical.js",
-    "sync:gmail": "node scripts/sync-airbnb-gmail.js"
+    "sync:gmail": "node scripts/sync-airbnb-gmail.js",
+    "test": "node scripts/test-sync-parsers.js"
   },
   "dependencies": {
     "imapflow": "^1.0.191",

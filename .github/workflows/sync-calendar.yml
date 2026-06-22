@@ -30,7 +30,7 @@ jobs:
           AIRBNB_ICAL_URL: ${{ secrets.AIRBNB_ICAL_URL }}
           BOOKING_ICAL_URL: ${{ secrets.BOOKING_ICAL_URL }}
 
-      - name: Sync Airbnb reservation details from Gmail
+      - name: Sync Airbnb and Booking reservation details from Gmail
         run: npm run sync:gmail
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}

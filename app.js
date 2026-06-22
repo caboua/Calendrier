@@ -107,10 +107,10 @@ function overlaps(a, b) {
          new Date(a.end + "T00:00:00") > new Date(b.start + "T00:00:00");
 }
 
-function normalizeIcalBooking(r) {
+function normalizeIcalReservation(r) {
   return {
     type: "reservation",
-    source: "Booking",
+    source: r.source || "",
     nom: "",
     start: r.start,
     end: r.end,
@@ -121,6 +121,30 @@ function normalizeIcalBooking(r) {
     nuits: countNights(r.start, r.end),
     aCompleter: true
   };
+}
+
+function normalizedIcalTitle(r) {
+  return cleanText(r.summary || r.title || "").toLowerCase();
+}
+
+function isGuestStay(r) {
+  const source = (r.source || "").toLowerCase();
+  const title = normalizedIcalTitle(r);
+
+  if (source === "airbnb") return title === "reserved";
+  if (source === "booking") return Boolean(title) && !/closed|not available|indisponible/.test(title);
+  return false;
+}
+
+function hasExactCalendarStay(reservation, calendarRows) {
+  const source = (reservation.source || "").toLowerCase();
+  if (source !== "airbnb" && source !== "booking") return true;
+
+  return calendarRows.some(row =>
+    (row.source || "").toLowerCase() === source &&
+    row.start === reservation.start &&
+    row.end === reservation.end
+  );
 }
 
 function isValidIcal(r) {
@@ -253,9 +277,9 @@ function updateStats(reservations, calendarDate) {
   const year = calendarDate.getFullYear();
 
   const duMois = reservations.filter(r => overlapsMonth(r, calendarDate));
-  const deJanvierAuMoisActuel = reservations.filter(r => {
+  const deLAnnee = reservations.filter(r => {
     const d = new Date(r.start + "T00:00:00");
-    return d.getFullYear() === year && d.getMonth() <= calendarDate.getMonth();
+    return d.getFullYear() === year;
   });
 
   document.getElementById("statNuitsMois").textContent =
@@ -265,10 +289,10 @@ function updateStats(reservations, calendarDate) {
     formatEuros(duMois.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
 
   document.getElementById("statNuitsAnnee").textContent =
-    deJanvierAuMoisActuel.reduce((s, r) => s + r.nuits, 0) || "0";
+    deLAnnee.reduce((s, r) => s + r.nuits, 0) || "0";
 
   document.getElementById("statRevenuAnnee").textContent =
-    formatEuros(deJanvierAuMoisActuel.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
+    formatEuros(deLAnnee.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
 }
 
 /* ── Modal réservation ────────────────────────────────── */
@@ -286,7 +310,7 @@ function ouvrirModal(r) {
 
   document.getElementById("modalContent").innerHTML = `
     <span class="modal-source-tag ${src}">${escapeHtml(srcLabel)}</span>
-    <div class="modal-name">${escapeHtml(r.nom || "Réservation Booking")}</div>
+    <div class="modal-name">${escapeHtml(r.nom || `${srcLabel} — informations en attente`)}</div>
     <div class="modal-grid">
       <div class="modal-field"><label>Arrivée</label><span>${formatDateFR(r.start)}</span></div>
       <div class="modal-field"><label>Départ</label><span>${formatDateFR(r.end)}</span></div>
@@ -296,7 +320,7 @@ function ouvrirModal(r) {
       <div class="modal-field"><label>À recevoir</label><span class="money">${escapeHtml(cleanMoney(r.vous_gagnez)) || "—"}</span></div>
       ${r.code && !todo ? `<div class="modal-field full"><label>Code réservation</label><span>${escapeHtml(r.code)}</span></div>` : ""}
     </div>
-    ${todo ? `<div class="modal-note">ℹ️ Réservation Booking synchronisée automatiquement, dates seules.</div>` : ""}
+    ${todo ? `<div class="modal-note">Les nuits sont confirmées par le calendrier ${escapeHtml(srcLabel)}. Les autres informations seront ajoutées dès que le mail sera reconnu.</div>` : ""}
   `;
 
   document.getElementById("modal").hidden = false;
@@ -346,7 +370,7 @@ function cardReservation(r) {
 
   const nuits = r.nuits || countNights(r.start, r.end);
   const todo = r.aCompleter || !r.nom;
-  const nom = r.nom || "Réservation Booking";
+  const nom = r.nom || `${r.source || "Plateforme"} — informations en attente`;
 
   return `
     <article class="reservation-item ${sc}${todo ? " acompleter" : ""}" data-key="${escapeHtml(cleKey(r))}">
@@ -389,16 +413,17 @@ function afficherListeMois(items, calendarDate, onClickRes) {
 
 async function chargerCalendrier() {
   const details = await loadJson("./data/reservations_details.json");
+  const bloque = await loadJson("./data/reservations.json");
   const reservations = details
     .map(normalizeReservation)
     .filter(isValidReservation)
     .filter(isCurrentOrFuture)
+    .filter(r => hasExactCalendarStay(r, bloque))
     .sort((a, b) => a.start.localeCompare(b.start));
 
-  const bloque = await loadJson("./data/reservations.json");
-  const bookingAuto = bloque
-    .filter(r => (r.source || "").toLowerCase() === "booking")
-    .map(normalizeIcalBooking)
+  const reservationsAuto = bloque
+    .filter(isGuestStay)
+    .map(normalizeIcalReservation)
     .filter(isValidIcal)
     .filter(isCurrentOrFuture)
     .filter(g => !reservations.some(r => overlaps(r, g)));
@@ -417,12 +442,14 @@ async function chargerCalendrier() {
     .filter(isValidNote)
     .filter(isCurrentOrFuture);
 
-  const toutes = reservations.concat(bookingAuto).concat(notes)
+  const reservationsAffichees = reservations.concat(reservationsAuto)
+    .sort((a, b) => a.start.localeCompare(b.start));
+  const toutes = reservationsAffichees.concat(notes)
     .sort((a, b) => a.start.localeCompare(b.start));
 
   const lastUpdate = document.getElementById("lastUpdate");
-  lastUpdate.textContent = toutes.length
-    ? `${toutes.length} élément${toutes.length > 1 ? "s" : ""} chargé${toutes.length > 1 ? "s" : ""}`
+  lastUpdate.textContent = reservationsAffichees.length
+    ? `${reservationsAffichees.length} réservation${reservationsAffichees.length > 1 ? "s" : ""} à venir`
     : "Aucune réservation à venir.";
 
   const events = toutes.map(r => {
@@ -443,7 +470,7 @@ async function chargerCalendrier() {
     const colors = { airbnb: "#ff5a5f", booking: "#0071c2", manuel: "#7c3aed" };
 
     return {
-      title: r.aCompleter ? "Booking — à compléter" : r.nom,
+      title: r.aCompleter ? `${r.source} — informations en attente` : r.nom,
       start: r.start,
       end: r.end,
       allDay: true,
@@ -459,7 +486,9 @@ async function chargerCalendrier() {
     fixedWeekCount: false,
 showNonCurrentDates: false,
     initialView: "dayGridMonth",
-    initialDate: new Date().toISOString().slice(0, 10),
+    initialDate: reservationsAffichees.length
+      ? reservationsAffichees[0].start
+      : new Date().toISOString().slice(0, 10),
     locale: "fr",
     firstDay: 1,
     height: "auto",
@@ -497,7 +526,7 @@ showNonCurrentDates: false,
 
     datesSet(info) {
       afficherListeMois(toutes, info.view.currentStart, ouvrirModal);
-      updateStats(reservations, info.view.currentStart);
+      updateStats(reservationsAffichees, info.view.currentStart);
     },
 
     eventClick(info) {

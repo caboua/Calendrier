@@ -80,8 +80,14 @@ function linesFromText(text) {
 
 function findLineAfter(lines, label, predicate = value => value) {
   const normalizedLabel = normalizeText(label).toLowerCase();
-  const index = lines.findIndex(line => normalizeText(line).toLowerCase() === normalizedLabel);
+  const index = lines.findIndex(line => {
+    const normalizedLine = normalizeText(line).toLowerCase();
+    return normalizedLine === normalizedLabel || normalizedLine.startsWith(normalizedLabel + ":");
+  });
   if (index < 0) return "";
+
+  const inlineValue = lines[index].replace(/^[^:]+:\s*/, "").trim();
+  if (inlineValue !== lines[index] && predicate(inlineValue)) return inlineValue;
 
   for (let i = index + 1; i < Math.min(lines.length, index + 8); i += 1) {
     if (predicate(lines[i])) return lines[i];
@@ -112,7 +118,7 @@ function cleanMoney(value) {
   return match ? match[0].replace(/\s+/g, " ") : "";
 }
 
-function parseReservationEmail(parsed) {
+function parseAirbnbEmail(parsed) {
   const subject = parsed.subject || "";
   const body = parsed.text || "";
   const normalizedSubject = normalizeText(subject).toLowerCase();
@@ -151,6 +157,85 @@ function parseReservationEmail(parsed) {
   };
 }
 
+function moneyNumber(value) {
+  const match = String(value || "").replace(/\s/g, "").match(/-?\d+(?:[.,]\d{1,2})?/);
+  return match ? Number(match[0].replace(",", ".")) : null;
+}
+
+function formatMoney(value) {
+  return value == null
+    ? ""
+    : value.toLocaleString("fr-FR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: false
+    }) + " €";
+}
+
+function firstValueAfter(lines, labels, predicate = value => value) {
+  for (const label of labels) {
+    const value = findLineAfter(lines, label, predicate);
+    if (value) return value;
+  }
+  return "";
+}
+
+function parseBookingEmail(parsed) {
+  const subject = parsed.subject || "";
+  const body = parsed.text || "";
+  const combined = normalizeText(subject + " " + body).toLowerCase();
+  if (!combined.includes("booking.com") && !combined.includes("booking number")) return null;
+
+  const lines = linesFromText(body);
+  const fallbackYear = parsed.date ? parsed.date.getFullYear() : new Date().getFullYear();
+  const datePredicate = value => parseFrenchDate(value, fallbackYear);
+  const startText = firstValueAfter(lines, ["Date d'arrivée", "Arrivée", "Check-in"], datePredicate);
+  const endText = firstValueAfter(lines, ["Date de départ", "Départ", "Check-out"], datePredicate);
+  const start = parseFrenchDate(startText, fallbackYear);
+  const end = parseFrenchDate(endText, fallbackYear);
+
+  let name = firstValueAfter(lines, ["Nom du client", "Nom de l'hôte", "Client"]);
+  name = String(name).replace(/\s+(?:Afficher|Langue|E-mail|Email|Téléphone).*$/i, "").trim();
+  if (!name) {
+    const subjectMatch = subject.match(/(?:réservation|reservation)(?:\s+Booking\.com)?\s*[-:]\s*(.+?)\s+arrive/i);
+    name = subjectMatch ? subjectMatch[1].trim() : "";
+  }
+
+  const guestLine = lines.find(line => /\b\d+\s+adulte/i.test(normalizeText(line))) || "";
+  const guestMatch = normalizeText(guestLine).match(/(\d+)\s+adulte/i);
+  const voyageurs = guestMatch
+    ? `${guestMatch[1]} adulte${Number(guestMatch[1]) > 1 ? "s" : ""}`
+    : "";
+
+  const codeLine = firstValueAfter(lines, ["Numéro de réservation", "Numero de reservation", "Booking number"]);
+  const codeMatch = String(codeLine).match(/[A-Z0-9-]{6,}/i);
+  const total = moneyNumber(firstValueAfter(lines, ["Montant total", "Prix total", "Total"]));
+  const payoutDirect = moneyNumber(firstValueAfter(lines, ["Vous recevrez", "Montant à recevoir", "Versement"]));
+  const commission = moneyNumber(firstValueAfter(lines, ["Commission et frais", "Commission"]));
+  const payout = payoutDirect != null
+    ? payoutDirect
+    : (total != null && commission != null ? total - commission : null);
+
+  if (!name || !start || !end) return null;
+
+  return {
+    source: "Booking",
+    nom: name,
+    start,
+    end,
+    voyageurs,
+    code: codeMatch ? codeMatch[0] : "",
+    total_paye: formatMoney(total),
+    vous_gagnez: formatMoney(payout),
+    nuits: countNights(start, end),
+    sujet: subject
+  };
+}
+
+function parseReservationEmail(parsed) {
+  return parseBookingEmail(parsed) || parseAirbnbEmail(parsed);
+}
+
 function reservationKey(reservation) {
   return reservation.code || [
     reservation.source,
@@ -186,7 +271,7 @@ async function openAllMail(client) {
   await client.mailboxOpen(allMail ? allMail.path : "INBOX");
 }
 
-async function fetchAirbnbMessages() {
+async function fetchReservationMessages() {
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
 
@@ -215,7 +300,7 @@ async function fetchAirbnbMessages() {
       const from = message.envelope.from?.map(item => item.address).join(" ") || "";
       const subject = message.envelope.subject || "";
 
-      if (!/airbnb/i.test(from) && !/airbnb|réservation|reservation/i.test(subject)) continue;
+      if (!/airbnb|booking/i.test(from) && !/airbnb|booking|réservation|reservation/i.test(subject)) continue;
 
       const parsed = await simpleParser(message.source);
       const reservation = parseReservationEmail(parsed);
@@ -231,7 +316,7 @@ async function fetchAirbnbMessages() {
 async function main() {
   fs.mkdirSync("data", { recursive: true });
 
-  const parsed = await fetchAirbnbMessages();
+  const parsed = await fetchReservationMessages();
   if (parsed.length === 0) {
     console.log("Aucune réservation Gmail à fusionner.");
     return;
@@ -245,7 +330,15 @@ async function main() {
   console.log(`Réservations détaillées totales: ${merged.length}`);
 }
 
-main().catch(error => {
-  console.error(error);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  parseAirbnbEmail,
+  parseBookingEmail,
+  parseReservationEmail
+};
