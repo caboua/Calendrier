@@ -294,7 +294,13 @@ async function fetchReservationMessages() {
     await openAllMail(client);
 
     const since = new Date(process.env.GMAIL_SINCE || "2026-01-01T00:00:00Z");
-    const uids = await client.search({ since });
+    const uids = await client.search({
+      since,
+      or: [
+        { from: "airbnb.com" },
+        { from: "booking.com" }
+      ]
+    });
     const reservations = [];
 
     for await (const message of client.fetch(uids, { envelope: true, source: true })) {
