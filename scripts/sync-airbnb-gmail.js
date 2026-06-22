@@ -54,16 +54,22 @@ function formatDate(year, month, day) {
 }
 
 function parseFrenchDate(value, fallbackYear) {
+  return parseFrenchDates(value, fallbackYear)[0] || "";
+}
+
+function parseFrenchDates(value, fallbackYear) {
   const text = normalizeText(value).toLowerCase();
-  const match = text.match(/(\d{1,2})\s+([a-z]+)\.?(?:\s+(\d{4}))?/i);
-  if (!match) return "";
+  const matches = text.matchAll(/(\d{1,2})\s+([a-z]+)\.?(?:\s+(\d{4}))?/gi);
+  const dates = [];
 
-  const day = Number(match[1]);
-  const month = FRENCH_MONTHS[match[2]];
-  const year = Number(match[3] || fallbackYear);
+  for (const match of matches) {
+    const day = Number(match[1]);
+    const month = FRENCH_MONTHS[match[2]];
+    const year = Number(match[3] || fallbackYear);
+    if (day && month && year) dates.push(formatDate(year, month, day));
+  }
 
-  if (!day || !month || !year) return "";
-  return formatDate(year, month, day);
+  return dates;
 }
 
 function countNights(start, end) {
@@ -137,8 +143,24 @@ function parseAirbnbEmail(parsed) {
   const fallbackYear = parsed.date ? parsed.date.getFullYear() : new Date().getFullYear();
   const startText = findLineAfter(lines, "Arrivée", value => parseFrenchDate(value, fallbackYear));
   const endText = findLineAfter(lines, "Départ", value => parseFrenchDate(value, fallbackYear));
-  const start = parseFrenchDate(startText, fallbackYear);
-  const end = parseFrenchDate(endText, fallbackYear);
+  let start = parseFrenchDate(startText, fallbackYear);
+  let end = parseFrenchDate(endText, fallbackYear);
+
+  if (!start || !end) {
+    const tableIndex = lines.findIndex(line => {
+      const text = normalizeText(line).toLowerCase();
+      return text.includes("arrivee") && text.includes("depart");
+    });
+
+    for (let i = tableIndex + 1; tableIndex >= 0 && i < Math.min(lines.length, tableIndex + 5); i += 1) {
+      const dates = parseFrenchDates(lines[i], fallbackYear);
+      if (dates.length >= 2) {
+        start = start || dates[0];
+        end = end || dates[1];
+        break;
+      }
+    }
+  }
   const name = cleanName(subject, body);
   const voyageurs = findLineAfter(lines, "Voyageurs");
   const code = findLineAfter(lines, "Code de confirmation");
