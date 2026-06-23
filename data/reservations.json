@@ -98,5 +98,15 @@
     "uid": "bac8fecd218b2919f3e5a5b65a9c0061@booking.com",
     "start": "2026-12-05",
     "end": "2026-12-18"
+  },
+  {
+    "source": "Booking",
+    "title": "CLOSED - Not available",
+    "summary": "CLOSED - Not available",
+    "description": "",
+    "location": "",
+    "uid": "898db86ace10362ec3bb86ad35453b0c@booking.com",
+    "start": "2027-02-10",
+    "end": "2027-02-16"
   }
 ]
