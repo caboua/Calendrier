@@ -118,5 +118,17 @@
     "vous_gagnez": "1474,80 €",
     "nuits": 13,
     "sujet": "Réservation Booking.com - François Casas arrive le 5 déc."
+  },
+  {
+    "source": "Airbnb",
+    "nom": "Genevieve Bassellier",
+    "start": "2026-12-29",
+    "end": "2027-01-03",
+    "voyageurs": "5 adultes",
+    "code": "HMTH5Y3Y9F",
+    "total_paye": "1019,70 €",
+    "vous_gagnez": "824,50 €",
+    "nuits": 5,
+    "sujet": "Réservation confirmée : Genevieve Bassellier arrive le 29 déc."
   }
 ]
