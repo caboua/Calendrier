@@ -1,7 +1,7 @@
 [
   {
     "id": "note_1781819552670",
-    "title": "Départ Marie-Galante",
+    "title": "D?part Marie-Galante",
     "start": "2026-07-12",
     "end": "2026-07-13",
     "description": ""
@@ -15,17 +15,17 @@
   },
   {
     "id": "note_1781819810442",
-    "title": "Anniversaire Théa",
+    "title": "Anniversaire Th?a",
     "start": "2026-07-03",
     "end": "2026-07-04",
-    "description": "Soirée pyjama"
+    "description": "Soir?e pyjama"
   },
   {
     "id": "note_1781819890366",
     "title": "Anniversaire Camille",
     "start": "2026-07-25",
     "end": "2026-07-26",
-    "description": "Plage Caraïbes"
+    "description": "Plage Cara?bes"
   },
   {
     "id": "note_1781819962001",
@@ -40,5 +40,12 @@
     "start": "2026-07-13",
     "end": "2026-07-15",
     "description": ""
+  },
+  {
+    "id": "note_1783258882616",
+    "title": "Location amis de Chris et Nico",
+    "start": "2026-07-07",
+    "end": "2026-07-10",
+    "description": "410?"
   }
 ]
