@@ -54,12 +54,5 @@
     "start": "2026-07-27",
     "end": "2026-07-28",
     "description": ""
-  },
-  {
-    "id": "note_1783379124550",
-    "title": "🔔 Test notification",
-    "start": "2026-07-30",
-    "end": "2026-07-31",
-    "description": "Note de test - sera supprimee automatiquement."
   }
 ]
