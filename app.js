@@ -164,7 +164,26 @@ function isValidIcal(r) {
   return r.start && r.end && new Date(r.end) > new Date(r.start);
 }
 
-/* ── Notes jaunes ─────────────────────────────────────── */
+/* ── Notes : catégories & couleurs ────────────────────── */
+
+const NOTE_CATS = {
+  manuel:       { label: "Location manuelle", bg: "#7c3aed", fg: "#ffffff" },
+  anniversaire: { label: "Anniversaire",      bg: "#f2c94c", fg: "#3b2f04" },
+  perso:        { label: "Note personnelle",  bg: "#cbb891", fg: "#4a3a1f" }
+};
+
+/* Catégorie d'une note : explicite si définie, sinon devinée d'après le titre. */
+function categorieNote(n) {
+  if (n && NOTE_CATS[n.categorie]) return n.categorie;
+  const t = ((n && (n.title || n.nom)) || "").toLowerCase();
+  if (/anniv/.test(t)) return "anniversaire";
+  if (/location|locat|loue|rental/.test(t)) return "manuel";
+  return "perso";
+}
+
+function couleurNote(cat) {
+  return NOTE_CATS[cat] || NOTE_CATS.perso;
+}
 
 function normalizeNote(n, index) {
   const start = n.start;
@@ -178,7 +197,8 @@ function normalizeNote(n, index) {
     title: cleanText(n.title || "Note"),
     start,
     end,
-    description: String(n.description || "")
+    description: String(n.description || ""),
+    categorie: categorieNote(n)
   };
 }
 
@@ -199,12 +219,13 @@ async function saveNotes(notes) {
 
 function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
   const isEdit = !!note;
+  const catActuelle = isEdit ? categorieNote(note) : "perso";
 
   const startValue = note?.start || startISO || "";
   const endValue = note?.end || endISO || addDaysISO(startValue, 1);
 
   document.getElementById("modalContent").innerHTML = `
-    <span class="modal-source-tag note">Note jaune</span>
+    <span class="modal-source-tag note" id="noteTag">Note</span>
     <div class="modal-name">${isEdit ? "Modifier la note" : "Ajouter une note"}</div>
 
     <div class="modal-grid">
@@ -227,6 +248,17 @@ function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
         <label>Informations</label>
         <textarea id="noteDescription" rows="5" placeholder="Écris ici les informations..." style="width:100%;border:none;background:transparent;font-family:inherit;font-weight:500;resize:vertical">${escapeHtml(note?.description || "")}</textarea>
       </div>
+
+      <div class="modal-field full">
+        <label>Type de note</label>
+        <div id="noteCatPicker" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          ${Object.entries(NOTE_CATS).map(([key, c]) => `
+            <button type="button" class="note-cat-btn" data-cat="${key}"
+              style="flex:1;min-width:110px;border:none;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:.82rem;background:${c.bg};color:${c.fg}">
+              ${c.label}
+            </button>`).join("")}
+        </div>
+      </div>
     </div>
 
     <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
@@ -240,6 +272,22 @@ function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
   `;
 
   document.getElementById("modal").hidden = false;
+
+  let categorieChoisie = catActuelle;
+  const majPicker = () => {
+    document.querySelectorAll(".note-cat-btn").forEach(b => {
+      const actif = b.dataset.cat === categorieChoisie;
+      b.style.outline = actif ? "3px solid #0f766e" : "none";
+      b.style.outlineOffset = "1px";
+      b.style.opacity = actif ? "1" : ".5";
+    });
+    const c = couleurNote(categorieChoisie);
+    const tag = document.getElementById("noteTag");
+    if (tag) { tag.style.background = c.bg; tag.style.color = c.fg; }
+  };
+  document.querySelectorAll(".note-cat-btn").forEach(b =>
+    b.addEventListener("click", () => { categorieChoisie = b.dataset.cat; majPicker(); }));
+  majPicker();
 
   document.getElementById("saveNoteBtn").onclick = async () => {
     const start = document.getElementById("noteStart").value;
@@ -263,7 +311,8 @@ function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
       title,
       start,
       end,
-      description
+      description,
+      categorie: categorieChoisie
     };
 
     if (isEdit) {
@@ -371,11 +420,12 @@ function cardReservation(r) {
   const sc = sourceClass(r.source, r.type);
 
   if (r.type === "note") {
+    const c = couleurNote(r.categorie);
     return `
-      <article class="reservation-item note" data-key="${escapeHtml(cleKey(r))}">
+      <article class="reservation-item note" data-key="${escapeHtml(cleKey(r))}" style="border-left-color:${c.bg}">
         <div class="res-header">
           <div class="res-name">${escapeHtml(r.nom)}</div>
-          <span class="res-source note">Note</span>
+          <span class="res-source note" style="background:${c.bg};color:${c.fg}">${escapeHtml(c.label)}</span>
         </div>
         <div class="res-dates">📝 ${formatDateFR(r.start)} → ${formatDateFR(r.end)}</div>
         <div class="res-meta"><span>${escapeHtml(r.description || "").split("\n")[0] || "Voir le détail"}</span></div>
@@ -470,7 +520,8 @@ async function chargerDonnees() {
     title: n.title || "Note",
     start: n.start,
     end: n.end || addDaysISO(n.start, 1),
-    description: n.description || ""
+    description: n.description || "",
+    categorie: categorieNote(n)
   }));
 
   const notes = nouvellesNotes
@@ -503,13 +554,14 @@ function appliquerDonnees(d) {
 function versEvenements(items) {
   return items.map(r => {
     if (r.type === "note") {
+      const c = couleurNote(r.categorie);
       return {
         title: "📝 " + r.nom,
         start: r.start,
         end: r.end,
         allDay: true,
-        color: "#f2c94c",
-        textColor: "#3b2f04",
+        color: c.bg,
+        textColor: c.fg,
         display: "block",
         extendedProps: r
       };
