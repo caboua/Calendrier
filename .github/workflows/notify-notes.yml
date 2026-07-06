@@ -1,0 +1,38 @@
+name: Notify note changes
+
+# Se déclenche dès qu'un commit modifie data/notes.json (ajout/édition/suppression
+# d'une note depuis le site). Envoie une notification ntfy aux téléphones abonnés.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/notes.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Snapshot des notes precedentes
+        run: |
+          mkdir -p .prevdata
+          git show HEAD~1:data/notes.json > .prevdata/notes.json 2>/dev/null || echo "[]" > .prevdata/notes.json
+
+      - name: Notifier les changements de notes
+        run: node scripts/notify-notes.js
+        env:
+          NTFY_URL: ${{ secrets.NTFY_URL }}
