@@ -24,6 +24,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Snapshot current data (avant synchro)
+        run: |
+          mkdir -p .prevdata
+          cp data/reservations.json .prevdata/ 2>/dev/null || true
+          cp data/annulations.json .prevdata/ 2>/dev/null || true
+
       - name: Sync Airbnb and Booking iCal calendars
         run: npm run sync:ical
         env:
@@ -44,3 +50,9 @@ jobs:
           git add data/reservations.json data/reservations_details.json data/annulations.json
           git commit -m "Update reservations" || echo "No changes"
           git push
+
+      - name: Notifier les nouveautes (iPhone via ntfy)
+        if: ${{ always() }}
+        run: node scripts/notify-changes.js
+        env:
+          NTFY_URL: ${{ secrets.NTFY_URL }}
