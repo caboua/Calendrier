@@ -61,6 +61,15 @@ async function loadJson(path) {
   return Array.isArray(data) ? data : [];
 }
 
+/* Fichier facultatif (peut ne pas encore exister sur le serveur) */
+async function loadJsonOptionnel(path) {
+  try {
+    return await loadJson(path);
+  } catch {
+    return [];
+  }
+}
+
 function parseEuros(value) {
   if (!value) return 0;
   const n = parseFloat(String(value).replace(/[^\d,]/g, "").replace(",", "."));
@@ -417,14 +426,25 @@ function afficherListeMois(items, calendarDate, onClickRes) {
 
 /* ── Chargement des données ───────────────────────────── */
 
+/* Même clé que dans scripts/sync-ical.js et sync-airbnb-gmail.js */
+function reservationKeyBrute(d) {
+  return d.code || [d.source, d.nom, d.start, d.end].join("|");
+}
+
 async function chargerDonnees() {
-  const [details, bloque, notesJson] = await Promise.all([
+  const [details, bloque, notesJson, annuleesJson] = await Promise.all([
     loadJson("./data/reservations_details.json"),
     loadJson("./data/reservations.json"),
-    loadJson("./data/notes.json")
+    loadJson("./data/notes.json"),
+    loadJsonOptionnel("./data/annulations.json")
   ]);
 
-  const reservations = details
+  /* Annulées = déduites par la synchro (plus au calendrier plateforme) :
+     on les ignore partout, affichage comme statistiques. */
+  const annulations = new Set(annuleesJson.map(a => a.key));
+  const detailsActifs = details.filter(d => !annulations.has(reservationKeyBrute(d)));
+
+  const reservations = detailsActifs
     .map(normalizeReservation)
     .filter(isValidReservation)
     .filter(isCurrentOrFuture)
@@ -440,7 +460,7 @@ async function chargerDonnees() {
 
   /* Les séjours déjà terminés servent aux statistiques cumulées
      (ils ne sont plus dans les iCal des plateformes, on garde les détails mail). */
-  const passees = details
+  const passees = detailsActifs
     .map(normalizeReservation)
     .filter(isValidReservation)
     .filter(r => !isCurrentOrFuture(r));
@@ -464,7 +484,7 @@ async function chargerDonnees() {
     .sort((a, b) => a.start.localeCompare(b.start));
 
   return {
-    snapshot: JSON.stringify({ details, bloque, notesJson }),
+    snapshot: JSON.stringify({ details, bloque, notesJson, annuleesJson }),
     toutes,
     aVenir,
     stats: passees.concat(aVenir),
