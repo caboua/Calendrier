@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calendrier — Villa CABOUA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260706-1" />
 </head>
 <body>
 
@@ -24,6 +24,9 @@
         <span class="badge-source airbnb">Airbnb</span>
         <span class="badge-source booking">Booking</span>
         <span class="badge-source manuel">Manuel</span>
+        <span class="live-badge" id="liveBadge" title="Les données se rafraîchissent automatiquement toutes les 30 secondes">
+          <span class="live-dot"></span> MAJ auto · 30 s
+        </span>
       </div>
     </div>
   </header>
@@ -49,14 +52,14 @@
         <span class="stat-icon">📆</span>
         <div>
           <div class="stat-value" id="statNuitsAnnee">—</div>
-          <div class="stat-label">Nuits cette année</div>
+          <div class="stat-label">Nuits depuis janvier</div>
         </div>
       </div>
       <div class="stat-card">
         <span class="stat-icon">💵</span>
         <div>
           <div class="stat-value" id="statRevenuAnnee">—</div>
-          <div class="stat-label">À recevoir cette année</div>
+          <div class="stat-label">À recevoir depuis janvier</div>
         </div>
       </div>
     </section>
@@ -77,7 +80,7 @@
 
   <footer>
     <p>Calendrier indicatif — Vérifier les plateformes avant toute confirmation.
-       · <a href="outils.html" style="color:#0f766e;font-weight:600;text-decoration:none">➕ Ajouter une réservation Booking</a></p>
+       · <a href="outils.html">➕ Ajouter une réservation Booking</a></p>
   </footer>
 
   <!-- Modal détail réservation -->
@@ -89,6 +92,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-  <script src="app.js?v=20260622-1"></script>
+  <script src="app.js?v=20260706-1"></script>
 </body>
 </html>

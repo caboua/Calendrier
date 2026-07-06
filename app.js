@@ -2,7 +2,15 @@
 
 const NOTES_API_URL = "https://script.google.com/macros/s/AKfycbyT5F1dLPELwdLbsedvIlzyLo_iZVP36LynNBokLYDMgiez5AlwrkbfbT3m-TVA4l0q1g/exec";
 
+/* Rafraîchissement automatique des données (sans recharger la page) */
+const REFRESH_MS = 30000;
+
 let notesGlobales = [];
+let calendar = null;
+let toutesGlobal = [];          /* réservations à venir + notes (affichage) */
+let reservationsAVenir = [];    /* réservations à venir (compteur) */
+let reservationsStats = [];     /* réservations passées + à venir (statistiques) */
+let dernierSnapshot = "";
 
 /* ── Helpers ──────────────────────────────────────────── */
 
@@ -47,14 +55,10 @@ function countNights(start, end) {
 }
 
 async function loadJson(path) {
-  try {
-    const res = await fetch(path + "?v=" + Date.now());
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
-  }
+  const res = await fetch(path + "?v=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) throw new Error("HTTP " + res.status + " sur " + path);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 function parseEuros(value) {
@@ -274,12 +278,14 @@ function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
 /* ── Stats ────────────────────────────────────────────── */
 
 function updateStats(reservations, calendarDate) {
-  const year = calendarDate.getFullYear();
-
   const duMois = reservations.filter(r => overlapsMonth(r, calendarDate));
-  const deLAnnee = reservations.filter(r => {
+
+  /* « depuis janvier » : cumul de l'année en cours, de janvier
+     jusqu'au mois actuel inclus, d'après la date d'arrivée. */
+  const now = new Date();
+  const cumul = reservations.filter(r => {
     const d = new Date(r.start + "T00:00:00");
-    return d.getFullYear() === year;
+    return d.getFullYear() === now.getFullYear() && d.getMonth() <= now.getMonth();
   });
 
   document.getElementById("statNuitsMois").textContent =
@@ -289,10 +295,10 @@ function updateStats(reservations, calendarDate) {
     formatEuros(duMois.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
 
   document.getElementById("statNuitsAnnee").textContent =
-    deLAnnee.reduce((s, r) => s + r.nuits, 0) || "0";
+    cumul.reduce((s, r) => s + r.nuits, 0) || "0";
 
   document.getElementById("statRevenuAnnee").textContent =
-    formatEuros(deLAnnee.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
+    formatEuros(cumul.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
 }
 
 /* ── Modal réservation ────────────────────────────────── */
@@ -409,11 +415,15 @@ function afficherListeMois(items, calendarDate, onClickRes) {
   });
 }
 
-/* ── Init calendrier ──────────────────────────────────── */
+/* ── Chargement des données ───────────────────────────── */
 
-async function chargerCalendrier() {
-  const details = await loadJson("./data/reservations_details.json");
-  const bloque = await loadJson("./data/reservations.json");
+async function chargerDonnees() {
+  const [details, bloque, notesJson] = await Promise.all([
+    loadJson("./data/reservations_details.json"),
+    loadJson("./data/reservations.json"),
+    loadJson("./data/notes.json")
+  ]);
+
   const reservations = details
     .map(normalizeReservation)
     .filter(isValidReservation)
@@ -428,8 +438,14 @@ async function chargerCalendrier() {
     .filter(isCurrentOrFuture)
     .filter(g => !reservations.some(r => overlaps(r, g)));
 
-  const notesJson = await loadJson("./data/notes.json");
-  notesGlobales = notesJson.map((n, i) => ({
+  /* Les séjours déjà terminés servent aux statistiques cumulées
+     (ils ne sont plus dans les iCal des plateformes, on garde les détails mail). */
+  const passees = details
+    .map(normalizeReservation)
+    .filter(isValidReservation)
+    .filter(r => !isCurrentOrFuture(r));
+
+  const nouvellesNotes = notesJson.map((n, i) => ({
     id: n.id || "note_" + i + "_" + n.start,
     title: n.title || "Note",
     start: n.start,
@@ -437,22 +453,35 @@ async function chargerCalendrier() {
     description: n.description || ""
   }));
 
-  const notes = notesGlobales
+  const notes = nouvellesNotes
     .map(normalizeNote)
     .filter(isValidNote)
     .filter(isCurrentOrFuture);
 
-  const reservationsAffichees = reservations.concat(reservationsAuto)
+  const aVenir = reservations.concat(reservationsAuto)
     .sort((a, b) => a.start.localeCompare(b.start));
-  const toutes = reservationsAffichees.concat(notes)
+  const toutes = aVenir.concat(notes)
     .sort((a, b) => a.start.localeCompare(b.start));
 
-  const lastUpdate = document.getElementById("lastUpdate");
-  lastUpdate.textContent = reservationsAffichees.length
-    ? `${reservationsAffichees.length} réservation${reservationsAffichees.length > 1 ? "s" : ""} à venir`
-    : "Aucune réservation à venir.";
+  return {
+    snapshot: JSON.stringify({ details, bloque, notesJson }),
+    toutes,
+    aVenir,
+    stats: passees.concat(aVenir),
+    notes: nouvellesNotes
+  };
+}
 
-  const events = toutes.map(r => {
+function appliquerDonnees(d) {
+  dernierSnapshot = d.snapshot;
+  toutesGlobal = d.toutes;
+  reservationsAVenir = d.aVenir;
+  reservationsStats = d.stats;
+  notesGlobales = d.notes;
+}
+
+function versEvenements(items) {
+  return items.map(r => {
     if (r.type === "note") {
       return {
         title: "📝 " + r.nom,
@@ -460,34 +489,86 @@ async function chargerCalendrier() {
         end: r.end,
         allDay: true,
         color: "#f2c94c",
-        textColor: "#1e293b",
+        textColor: "#3b2f04",
         display: "block",
         extendedProps: r
       };
     }
 
     const sc = sourceClass(r.source, r.type);
-    const colors = { airbnb: "#ff5a5f", booking: "#0071c2", manuel: "#7c3aed" };
+    const colors = { airbnb: "#ff385c", booking: "#006ce4", manuel: "#7c3aed" };
 
     return {
       title: r.aCompleter ? `${r.source} — informations en attente` : r.nom,
       start: r.start,
       end: r.end,
       allDay: true,
-      color: colors[sc] || "#ff5a5f",
+      color: colors[sc] || "#ff385c",
       display: "block",
       classNames: r.aCompleter ? ["fc-acompleter"] : [],
       extendedProps: r
     };
   });
+}
 
-  
-  const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+/* ── Rafraîchissement automatique (30 s) ──────────────── */
+
+function majIndicateur() {
+  const el = document.getElementById("lastUpdate");
+  if (!el) return;
+  const n = reservationsAVenir.length;
+  const heure = new Date().toLocaleTimeString("fr-FR", {
+    hour: "2-digit", minute: "2-digit", second: "2-digit"
+  });
+  el.textContent =
+    (n ? `${n} réservation${n > 1 ? "s" : ""} à venir` : "Aucune réservation à venir")
+    + ` · actualisé à ${heure}`;
+}
+
+function signalerMaj() {
+  const badge = document.getElementById("liveBadge");
+  if (!badge) return;
+  badge.classList.add("flash");
+  setTimeout(() => badge.classList.remove("flash"), 2500);
+}
+
+function majAffichage() {
+  if (!calendar) return;
+  calendar.refetchEvents();
+  const dateCourante = calendar.view.currentStart;
+  afficherListeMois(toutesGlobal, dateCourante, ouvrirModal);
+  updateStats(reservationsStats, dateCourante);
+}
+
+async function rafraichir() {
+  try {
+    const d = await chargerDonnees();
+    if (d.snapshot !== dernierSnapshot) {
+      appliquerDonnees(d);
+      majAffichage();
+      signalerMaj();
+    }
+    majIndicateur();
+  } catch {
+    /* réseau indisponible : on garde les données affichées */
+  }
+}
+
+/* ── Init calendrier ──────────────────────────────────── */
+
+async function chargerCalendrier() {
+  try {
+    appliquerDonnees(await chargerDonnees());
+  } catch {
+    appliquerDonnees({ snapshot: "", toutes: [], aVenir: [], stats: [], notes: [] });
+  }
+
+  calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
     fixedWeekCount: false,
-showNonCurrentDates: false,
+    showNonCurrentDates: false,
     initialView: "dayGridMonth",
-    initialDate: reservationsAffichees.length
-      ? reservationsAffichees[0].start
+    initialDate: reservationsAVenir.length
+      ? reservationsAVenir[0].start
       : new Date().toISOString().slice(0, 10),
     locale: "fr",
     firstDay: 1,
@@ -514,7 +595,9 @@ showNonCurrentDates: false,
       month: "Mois"
     },
 
-    events,
+    events(info, success) {
+      success(versEvenements(toutesGlobal));
+    },
 
     select(info) {
       ouvrirNoteForm(null, info.startStr, info.endStr);
@@ -525,8 +608,8 @@ showNonCurrentDates: false,
     },
 
     datesSet(info) {
-      afficherListeMois(toutes, info.view.currentStart, ouvrirModal);
-      updateStats(reservationsAffichees, info.view.currentStart);
+      afficherListeMois(toutesGlobal, info.view.currentStart, ouvrirModal);
+      updateStats(reservationsStats, info.view.currentStart);
     },
 
     eventClick(info) {
@@ -535,6 +618,12 @@ showNonCurrentDates: false,
   });
 
   calendar.render();
+  majIndicateur();
+
+  setInterval(rafraichir, REFRESH_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) rafraichir();
+  });
 }
 
 chargerCalendrier();
