@@ -142,5 +142,17 @@
     "vous_gagnez": "824,50 €",
     "nuits": 5,
     "sujet": "Réservation confirmée : Genevieve Bassellier arrive le 29 déc."
+  },
+  {
+    "source": "Booking",
+    "nom": "Yvon Marzin",
+    "start": "2027-02-10",
+    "end": "2027-02-16",
+    "voyageurs": "4 adultes, 1 enfant",
+    "code": "5595759799",
+    "total_paye": "1021,96 €",
+    "vous_gagnez": "860,39 €",
+    "nuits": 6,
+    "sujet": "Ajout manuel depuis extranet Booking"
   }
 ]
