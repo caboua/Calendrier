@@ -145,7 +145,10 @@ function isGuestStay(r) {
   const title = normalizedIcalTitle(r);
 
   if (source === "airbnb") return title === "reserved";
-  if (source === "booking") return Boolean(title) && !/closed|not available|indisponible/.test(title);
+  // Booking étiquette TOUTE période occupée « CLOSED - Not available » (réservations
+  // comme blocages), sans nom ni « Reserved ». On affiche donc tout créneau Booking,
+  // sinon les vraies réservations Booking sont masquées.
+  if (source === "booking") return Boolean(title);
   return false;
 }
 

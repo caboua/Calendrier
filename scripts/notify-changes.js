@@ -40,7 +40,9 @@ function isGuestStay(r) {
   const source = (r.source || "").toLowerCase();
   const title = cleanText(r.summary || r.title || "");
   if (source === "airbnb") return title === "reserved";
-  if (source === "booking") return Boolean(title) && !/closed|not available|indisponible/.test(title);
+  // Booking étiquette toute période occupée « CLOSED - Not available » : on la
+  // traite comme une réservation (sinon les vraies résas Booking sont ignorées).
+  if (source === "booking") return Boolean(title);
   return false;
 }
 
