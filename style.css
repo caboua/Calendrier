@@ -164,6 +164,34 @@ body {
   box-shadow: 0 6px 20px rgba(5, 150, 105, .5);
 }
 
+/* Bouton « Forcer la synchro » */
+.sync-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #052e2b;
+  background: linear-gradient(180deg, #fde68a, #fbbf24);
+  border: 1px solid rgba(255, 255, 255, .45);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .16);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .2s, opacity .2s;
+}
+
+.sync-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .22);
+}
+
+.sync-btn:disabled {
+  opacity: .75;
+  cursor: default;
+}
+
 /* ── Stats ─────────────────────────────────────────────── */
 .stats-bar {
   display: flex;

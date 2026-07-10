@@ -634,6 +634,41 @@ async function rafraichir() {
   }
 }
 
+/* ── Synchronisation forcée ───────────────────────────── */
+
+/* Demande au robot GitHub d'aller rechercher immédiatement les calendriers
+   Airbnb/Booking (via le script Google, qui déclenche le workflow).
+   Le résultat s'affiche tout seul grâce au rafraîchissement auto (30 s). */
+function initBoutonSync() {
+  const btn = document.getElementById("btnForceSync");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = "⏳ Lancement…";
+
+    try {
+      await fetch(NOTES_API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({ action: "sync" })
+      });
+      btn.textContent = "✓ Synchro en cours (~2 min)";
+      /* anti-spam : on laisse le temps à la synchro de finir */
+      setTimeout(() => {
+        btn.textContent = "🔄 Forcer la synchro";
+        btn.disabled = false;
+      }, 120000);
+    } catch {
+      btn.textContent = "✗ Échec — réessayer";
+      setTimeout(() => {
+        btn.textContent = "🔄 Forcer la synchro";
+        btn.disabled = false;
+      }, 5000);
+    }
+  });
+}
+
 /* ── Init calendrier ──────────────────────────────────── */
 
 async function chargerCalendrier() {
@@ -699,6 +734,7 @@ async function chargerCalendrier() {
 
   calendar.render();
   majIndicateur();
+  initBoutonSync();
 
   setInterval(rafraichir, REFRESH_MS);
   document.addEventListener("visibilitychange", () => {
