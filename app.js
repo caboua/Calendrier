@@ -341,13 +341,18 @@ function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
 function updateStats(reservations, calendarDate) {
   const duMois = reservations.filter(r => overlapsMonth(r, calendarDate));
 
-  /* « depuis janvier » : cumul de l'année en cours, de janvier
-     jusqu'au mois actuel inclus, d'après la date d'arrivée. */
+  /* Cumul annuel : toute l'année en cours (janvier → décembre),
+     d'après la date d'arrivée. Les années suivantes sont exclues. */
   const now = new Date();
   const cumul = reservations.filter(r => {
     const d = new Date(r.start + "T00:00:00");
-    return d.getFullYear() === now.getFullYear() && d.getMonth() <= now.getMonth();
+    return d.getFullYear() === now.getFullYear();
   });
+
+  const labelNuits = document.getElementById("labelNuitsAnnee");
+  const labelRevenu = document.getElementById("labelRevenuAnnee");
+  if (labelNuits) labelNuits.textContent = `Nuits en ${now.getFullYear()}`;
+  if (labelRevenu) labelRevenu.textContent = `À recevoir en ${now.getFullYear()}`;
 
   document.getElementById("statNuitsMois").textContent =
     duMois.reduce((s, r) => s + r.nuits, 0) || "0";
