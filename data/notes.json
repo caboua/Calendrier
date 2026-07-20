@@ -4,71 +4,79 @@
     "title": "D?part Marie-Galante",
     "start": "2026-07-12",
     "end": "2026-07-13",
-    "description": "",
-    "categorie": "perso"
+    "categorie": "perso",
+    "description": ""
   },
   {
     "id": "note_1781819710339",
     "title": "S?jour M?tropole Les filles",
     "start": "2026-07-16",
-    "end": "2026-08-20",
-    "description": "",
-    "categorie": "perso"
+    "end": "2026-07-17",
+    "categorie": "perso",
+    "description": ""
   },
   {
     "id": "note_1781819810442",
     "title": "Anniversaire Th?a",
     "start": "2026-07-03",
     "end": "2026-07-04",
-    "description": "Soir?e pyjama",
-    "categorie": "anniversaire"
+    "categorie": "anniversaire",
+    "description": "Soir?e pyjama"
   },
   {
     "id": "note_1781819890366",
     "title": "Anniversaire Camille",
     "start": "2026-07-25",
     "end": "2026-07-26",
-    "description": "Plage Caraibes",
-    "categorie": "anniversaire"
+    "categorie": "anniversaire",
+    "description": "Plage Caraibes"
   },
   {
     "id": "note_1781819962001",
     "title": "Anniversaire Olivier Chamand",
     "start": "2026-06-29",
     "end": "2026-06-30",
-    "description": "",
-    "categorie": "anniversaire"
+    "categorie": "anniversaire",
+    "description": ""
   },
   {
     "id": "note_1781830006519",
     "title": "Marie galante",
     "start": "2026-07-13",
-    "end": "2026-07-15",
-    "description": "",
-    "categorie": "perso"
+    "end": "2026-07-14",
+    "categorie": "perso",
+    "description": ""
   },
   {
     "id": "note_1783259186054",
     "title": "Location ami Nico et chris",
     "start": "2026-07-07",
-    "end": "2026-07-10",
-    "description": "410?",
-    "categorie": "manuel"
+    "end": "2026-07-08",
+    "categorie": "manuel",
+    "description": "410?"
   },
   {
     "id": "note_1783379718572",
     "title": "Relax boat",
     "start": "2026-07-22",
     "end": "2026-07-23",
-    "description": "",
-    "categorie": "perso"
+    "categorie": "perso",
+    "description": ""
   },
   {
     "id": "note_1784549666890",
     "title": "Location direct Mme Martin",
     "start": "2027-01-18",
+    "end": "2027-01-19",
+    "categorie": "manuel",
+    "description": "‪+33 6 18 34 35 66‬"
+  },
+  {
+    "id": "note_1784549841628",
+    "title": "Location direct Mme Martin",
+    "start": "2027-01-18",
     "end": "2027-01-22",
-    "description": "+33 6 18 34 35 66",
-    "categorie": "manuel"
+    "categorie": "manuel",
+    "description": ""
   }
 ]
