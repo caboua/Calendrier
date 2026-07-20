@@ -11,7 +11,7 @@
     "id": "note_1781819710339",
     "title": "S?jour M?tropole Les filles",
     "start": "2026-07-16",
-    "end": "2026-07-17",
+    "end": "2026-08-20",
     "categorie": "perso",
     "description": ""
   },
@@ -43,7 +43,7 @@
     "id": "note_1781830006519",
     "title": "Marie galante",
     "start": "2026-07-13",
-    "end": "2026-07-14",
+    "end": "2026-07-15",
     "categorie": "perso",
     "description": ""
   },
@@ -51,7 +51,7 @@
     "id": "note_1783259186054",
     "title": "Location ami Nico et chris",
     "start": "2026-07-07",
-    "end": "2026-07-08",
+    "end": "2026-07-10",
     "categorie": "manuel",
     "description": "410?"
   },
@@ -67,16 +67,8 @@
     "id": "note_1784549666890",
     "title": "Location direct Mme Martin",
     "start": "2027-01-18",
-    "end": "2027-01-19",
-    "categorie": "manuel",
-    "description": "‪+33 6 18 34 35 66‬"
-  },
-  {
-    "id": "note_1784549841628",
-    "title": "Location direct Mme Martin",
-    "start": "2027-01-18",
     "end": "2027-01-22",
     "categorie": "manuel",
-    "description": ""
+    "description": "+33 6 18 34 35 66"
   }
 ]
