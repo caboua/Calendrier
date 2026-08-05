@@ -120,6 +120,18 @@
     "sujet": "Réservation confirmée : Mina Miminne arrive le 3 août"
   },
   {
+    "source": "Airbnb",
+    "nom": "Pisiou Panay",
+    "start": "2026-08-17",
+    "end": "2026-08-19",
+    "voyageurs": "1 adulte, 2 enfants",
+    "code": "HMYAZYD9E2",
+    "total_paye": "375,17 €",
+    "vous_gagnez": "312,65 €",
+    "nuits": 2,
+    "sujet": "Réservation confirmée : Pisiou Panay arrive le 17 août"
+  },
+  {
     "source": "Booking",
     "nom": "François Casas",
     "start": "2026-12-05",
