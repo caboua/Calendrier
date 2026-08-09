@@ -168,6 +168,18 @@
     "sujet": "Réservation confirmée : Genevieve Bassellier arrive le 29 déc."
   },
   {
+    "source": "Airbnb",
+    "nom": "Yves Chau",
+    "start": "2027-01-30",
+    "end": "2027-02-04",
+    "voyageurs": "3 adultes",
+    "code": "HMRK8H9TET",
+    "total_paye": "1005,00 €",
+    "vous_gagnez": "811,20 €",
+    "nuits": 5,
+    "sujet": "Réservation confirmée : Yves Chau arrive le 30 janv."
+  },
+  {
     "source": "Booking",
     "nom": "Yvon Marzin",
     "start": "2027-02-10",

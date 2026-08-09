@@ -115,6 +115,36 @@
     "summary": "Airbnb (Not available)",
     "description": "",
     "location": "",
+    "uid": "7f662ec65913-f68f6ca2f13e2acd8de50f4756c69964@airbnb.com",
+    "start": "2027-01-29",
+    "end": "2027-01-30"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Reserved",
+    "summary": "Reserved",
+    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMRK8H9TET\nPhone Number (Last 4 Digits): 0684",
+    "location": "",
+    "uid": "1418fb94e984-ab9c94f8f20ef29b27782d395425c4ea@airbnb.com",
+    "start": "2027-01-30",
+    "end": "2027-02-04"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-30920a5b1a173b52953e3680c144b985@airbnb.com",
+    "start": "2027-02-04",
+    "end": "2027-02-05"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
     "uid": "7f662ec65913-be2f68508a4b1f270429eacc6761b31f@airbnb.com",
     "start": "2027-02-10",
     "end": "2027-02-17"
