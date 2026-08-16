@@ -6,7 +6,8 @@ const NOTES_API_URL = "https://script.google.com/macros/s/AKfycbyT5F1dLPELwdLbse
 const REFRESH_MS = 30000;
 
 let notesGlobales = [];
-let penseBeteTexte = "";        /* mémo « pense-bête » partagé (texte libre) */
+let penseBeteTexte = "";        /* pense-bête partagé : 1 tâche par ligne */
+let penseBeteDirtyUntil = 0;    /* garde anti-écrasement après édition locale */
 let calendar = null;
 let toutesGlobal = [];          /* réservations à venir + notes (affichage) */
 let reservationsAVenir = [];    /* réservations à venir (compteur) */
@@ -419,6 +420,8 @@ function ouvrirModal(r) {
 }
 
 function fermerModal() {
+  /* si une sauvegarde du pense-bête était en attente, on l'envoie tout de suite */
+  if (penseBeteSaveTimer) sauverPenseBete();
   document.getElementById("modal").hidden = true;
 }
 
@@ -583,7 +586,9 @@ function appliquerDonnees(d) {
   reservationsAVenir = d.aVenir;
   reservationsStats = d.stats;
   notesGlobales = d.notes;
-  penseBeteTexte = d.penseBete || "";
+  /* On garde la version locale pendant ~3 min après une modification, le temps
+     que GitHub Pages republie notes.json (sinon la tâche cochée réapparaîtrait). */
+  if (Date.now() > penseBeteDirtyUntil) penseBeteTexte = d.penseBete || "";
 }
 
 function versEvenements(items) {
@@ -696,50 +701,115 @@ function initBoutonSync() {
   });
 }
 
-/* ── Pense-bête (mémo partagé) ────────────────────────── */
+/* ── Pense-bête (liste de tâches à cocher, partagée) ──── */
+
+let penseBeteSaveTimer = null;
+
+function penseBeteTaches() {
+  return penseBeteTexte.split("\n").map(t => t.trim()).filter(Boolean);
+}
+
+function rendrePenseBeteListe() {
+  const liste = document.getElementById("pbListe");
+  if (!liste) return;
+  const taches = penseBeteTaches();
+
+  if (taches.length === 0) {
+    liste.innerHTML = `<li class="pb-vide">Rien à faire 🎉<br>Ajoute une tâche ci-dessus.</li>`;
+    return;
+  }
+
+  liste.innerHTML = taches.map((t, i) => `
+    <li class="pb-item" data-i="${i}">
+      <label>
+        <input type="checkbox" class="pb-check" aria-label="Marquer comme fait">
+        <span class="pb-texte">${escapeHtml(t)}</span>
+      </label>
+    </li>
+  `).join("");
+
+  liste.querySelectorAll(".pb-check").forEach(chk => {
+    chk.addEventListener("change", () => {
+      const li = chk.closest(".pb-item");
+      const idx = Number(li.dataset.i);
+      li.classList.add("pb-done");           /* petite animation avant retrait */
+      setTimeout(() => {
+        const restantes = penseBeteTaches();
+        restantes.splice(idx, 1);
+        penseBeteTexte = restantes.join("\n");
+        rendrePenseBeteListe();
+        programmerSavePenseBete();
+      }, 320);
+    });
+  });
+}
+
+function ajouterTache(texte) {
+  texte = (texte || "").trim();
+  if (!texte) return;
+  penseBeteTexte = penseBeteTaches().concat([texte]).join("\n");
+  rendrePenseBeteListe();
+  programmerSavePenseBete();
+}
 
 function ouvrirPenseBete() {
   document.getElementById("modalContent").innerHTML = `
     <span class="modal-source-tag pensebete">📝 Pense-bête</span>
     <div class="modal-name pensebete-titre">Choses à faire</div>
 
-    <textarea id="penseBeteZone" class="pensebete-zone"
-      placeholder="Écris ici ce qu'il y a à faire… (achats, ménage, réparations, rappels…)">${escapeHtml(penseBeteTexte)}</textarea>
-
-    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px">
-      <button id="penseBeteEffacer" class="pensebete-effacer">Tout effacer</button>
-      <button id="penseBeteSave" class="pensebete-save">💾 Enregistrer</button>
+    <div class="pb-ajout">
+      <input id="pbInput" type="text" placeholder="Ajouter une tâche… (ex : acheter du gaz)" />
+      <button id="pbAdd" class="pb-add">＋ Ajouter</button>
     </div>
 
-    <p style="font-size:.75rem;color:#94a3b8;margin-top:10px">
-      🔒 Partagé : visible et modifiable depuis tous les téléphones.
-    </p>
+    <ul class="pb-liste" id="pbListe"></ul>
+
+    <p class="pb-hint" id="pbStatut">🔒 Partagé sur tous les téléphones · coche une tâche pour la retirer.</p>
   `;
 
   document.getElementById("modal").hidden = false;
-  const zone = document.getElementById("penseBeteZone");
-  zone.focus();
+  rendrePenseBeteListe();
 
-  document.getElementById("penseBeteEffacer").onclick = () => { zone.value = ""; zone.focus(); };
-  document.getElementById("penseBeteSave").onclick = () => savePenseBete(zone.value.trim());
+  const input = document.getElementById("pbInput");
+  input.focus();
+  const valider = () => { ajouterTache(input.value); input.value = ""; input.focus(); };
+  document.getElementById("pbAdd").onclick = valider;
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); valider(); }
+  });
 }
 
-async function savePenseBete(texte) {
-  penseBeteTexte = texte;
+/* Sauvegarde différée (regroupe plusieurs coches rapides en un seul envoi). */
+function programmerSavePenseBete() {
+  penseBeteDirtyUntil = Date.now() + 180000;
+  const statut = document.getElementById("pbStatut");
+  if (statut) statut.textContent = "💾 Enregistrement…";
+  clearTimeout(penseBeteSaveTimer);
+  penseBeteSaveTimer = setTimeout(sauverPenseBete, 700);
+}
+
+async function sauverPenseBete() {
+  clearTimeout(penseBeteSaveTimer);
+  penseBeteSaveTimer = null;
+  penseBeteDirtyUntil = Date.now() + 180000;
 
   const datees = notesGlobales.map(n => ({
     id: n.id, title: n.title, start: n.start,
     end: n.end, categorie: n.categorie, description: n.description
   }));
 
-  await fetch(NOTES_API_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({ notes: avecPenseBete(datees) })
-  });
-
-  alert("Pense-bête enregistré. La page va se recharger.");
-  setTimeout(() => location.reload(), 1500);
+  try {
+    await fetch(NOTES_API_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({ notes: avecPenseBete(datees) })
+    });
+    const statut = document.getElementById("pbStatut");
+    if (statut) statut.textContent = "✓ Enregistré · partagé sur tous les téléphones.";
+  } catch {
+    const statut = document.getElementById("pbStatut");
+    if (statut) statut.textContent = "✗ Échec de l'enregistrement — réessaie.";
+  }
 }
 
 function initBoutonPenseBete() {

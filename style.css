@@ -223,54 +223,113 @@ body {
 
 .modal-name.pensebete-titre { color: #a16207; }
 
-.pensebete-zone {
-  width: 100%;
-  min-height: 240px;
+/* Champ d'ajout */
+.pb-ajout {
+  display: flex;
+  gap: 8px;
   margin-top: 6px;
-  padding: 16px 18px;
-  border: none;
-  border-radius: 12px;
-  background:
-    repeating-linear-gradient(#fffbe6, #fffbe6 31px, #fde68a 32px);
-  background-color: #fffbe6;
-  box-shadow: inset 0 0 0 1px #fde68a, 0 6px 18px rgba(0, 0, 0, .06);
+}
+
+.pb-ajout input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  background: #fffdf3;
   font-family: inherit;
   font-size: 1rem;
-  line-height: 32px;
   color: #422006;
-  resize: vertical;
 }
 
-.pensebete-zone:focus {
+.pb-ajout input:focus {
   outline: none;
-  box-shadow: inset 0 0 0 2px #f2c94c, 0 6px 18px rgba(0, 0, 0, .1);
+  border-color: #f2c94c;
+  box-shadow: 0 0 0 3px rgba(242, 201, 76, .3);
 }
 
-.pensebete-save {
+.pb-add {
+  flex-shrink: 0;
   background: #f2c94c;
   color: #3b2f04;
   border: none;
   border-radius: 10px;
-  padding: 10px 18px;
+  padding: 0 16px;
   font-weight: 700;
   font-family: inherit;
+  font-size: .9rem;
   cursor: pointer;
+  transition: background .15s;
 }
 
-.pensebete-save:hover { background: #eab308; }
+.pb-add:hover { background: #eab308; }
 
-.pensebete-effacer {
-  background: #fee2e2;
-  color: #991b1b;
-  border: none;
+/* Liste de tâches */
+.pb-liste {
+  list-style: none;
+  margin: 16px 0 4px;
+  padding: 0;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.pb-item {
+  background: #fffdf3;
+  border: 1px solid #fdeeb5;
+  border-left: 5px solid #f2c94c;
   border-radius: 10px;
-  padding: 10px 14px;
-  font-weight: 700;
-  font-family: inherit;
+  margin-bottom: 8px;
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+.pb-item label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
   cursor: pointer;
 }
 
-.pensebete-effacer:hover { background: #fecaca; }
+.pb-check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  accent-color: #16a34a;
+  cursor: pointer;
+}
+
+.pb-texte {
+  font-size: 1rem;
+  color: #3b2f04;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* Animation quand on coche : barré + fondu avant retrait */
+.pb-item.pb-done {
+  opacity: 0;
+  transform: translateX(14px);
+}
+
+.pb-item.pb-done .pb-texte {
+  text-decoration: line-through;
+  color: #16a34a;
+}
+
+.pb-vide {
+  text-align: center;
+  color: #a1936a;
+  padding: 26px 10px;
+  font-size: .95rem;
+  line-height: 1.7;
+}
+
+.pb-hint {
+  font-size: .75rem;
+  color: #94a3b8;
+  margin-top: 10px;
+  min-height: 1.1em;
+}
 
 /* ── Stats ─────────────────────────────────────────────── */
 .stats-bar {
