@@ -58,8 +58,9 @@ function aChange(a, b) {
 }
 
 function main() {
-  const prev = readJson(".prevdata/notes.json");
-  const cur = readJson("data/notes.json");
+  /* On ignore l'entrée spéciale « pensebete » (mémo libre, pas une note datée). */
+  const prev = readJson(".prevdata/notes.json").filter(n => n.id !== "pensebete");
+  const cur = readJson("data/notes.json").filter(n => n.id !== "pensebete");
 
   const prevById = new Map(prev.map(n => [n.id, n]));
   const curById = new Map(cur.map(n => [n.id, n]));
