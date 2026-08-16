@@ -6,6 +6,7 @@ const NOTES_API_URL = "https://script.google.com/macros/s/AKfycbyT5F1dLPELwdLbse
 const REFRESH_MS = 30000;
 
 let notesGlobales = [];
+let penseBeteTexte = "";        /* mémo « pense-bête » partagé (texte libre) */
 let calendar = null;
 let toutesGlobal = [];          /* réservations à venir + notes (affichage) */
 let reservationsAVenir = [];    /* réservations à venir (compteur) */
@@ -209,11 +210,30 @@ function isValidNote(n) {
   return n.start && n.title;
 }
 
+/* Le pense-bête est stocké comme une entrée spéciale (id "pensebete")
+   dans le même fichier notes.json — on la réinjecte à chaque sauvegarde
+   pour ne jamais la perdre. */
+function itemPenseBete() {
+  return {
+    id: "pensebete",
+    title: "pensebete",
+    start: "",
+    end: "",
+    categorie: "",
+    description: penseBeteTexte || ""
+  };
+}
+
+function avecPenseBete(notes) {
+  const sansPB = notes.filter(n => n.id !== "pensebete");
+  return sansPB.concat([itemPenseBete()]);
+}
+
 async function saveNotes(notes) {
   await fetch(NOTES_API_URL, {
     method: "POST",
     mode: "no-cors",
-    body: JSON.stringify({ notes })
+    body: JSON.stringify({ notes: avecPenseBete(notes) })
   });
 
   alert("Note enregistrée. La page va se recharger.");
@@ -523,7 +543,12 @@ async function chargerDonnees() {
     .filter(isValidReservation)
     .filter(r => !isCurrentOrFuture(r));
 
-  const nouvellesNotes = notesJson.map((n, i) => ({
+  /* Extrait le pense-bête (entrée spéciale) et le retire des notes datées. */
+  const pbItem = notesJson.find(n => n.id === "pensebete");
+  const pbTexte = pbItem ? (pbItem.description || pbItem.text || "") : "";
+  const notesDatees = notesJson.filter(n => n.id !== "pensebete");
+
+  const nouvellesNotes = notesDatees.map((n, i) => ({
     id: n.id || "note_" + i + "_" + n.start,
     title: n.title || "Note",
     start: n.start,
@@ -547,7 +572,8 @@ async function chargerDonnees() {
     toutes,
     aVenir,
     stats: passees.concat(aVenir),
-    notes: nouvellesNotes
+    notes: nouvellesNotes,
+    penseBete: pbTexte
   };
 }
 
@@ -557,6 +583,7 @@ function appliquerDonnees(d) {
   reservationsAVenir = d.aVenir;
   reservationsStats = d.stats;
   notesGlobales = d.notes;
+  penseBeteTexte = d.penseBete || "";
 }
 
 function versEvenements(items) {
@@ -669,6 +696,57 @@ function initBoutonSync() {
   });
 }
 
+/* ── Pense-bête (mémo partagé) ────────────────────────── */
+
+function ouvrirPenseBete() {
+  document.getElementById("modalContent").innerHTML = `
+    <span class="modal-source-tag pensebete">📝 Pense-bête</span>
+    <div class="modal-name pensebete-titre">Choses à faire</div>
+
+    <textarea id="penseBeteZone" class="pensebete-zone"
+      placeholder="Écris ici ce qu'il y a à faire… (achats, ménage, réparations, rappels…)">${escapeHtml(penseBeteTexte)}</textarea>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px">
+      <button id="penseBeteEffacer" class="pensebete-effacer">Tout effacer</button>
+      <button id="penseBeteSave" class="pensebete-save">💾 Enregistrer</button>
+    </div>
+
+    <p style="font-size:.75rem;color:#94a3b8;margin-top:10px">
+      🔒 Partagé : visible et modifiable depuis tous les téléphones.
+    </p>
+  `;
+
+  document.getElementById("modal").hidden = false;
+  const zone = document.getElementById("penseBeteZone");
+  zone.focus();
+
+  document.getElementById("penseBeteEffacer").onclick = () => { zone.value = ""; zone.focus(); };
+  document.getElementById("penseBeteSave").onclick = () => savePenseBete(zone.value.trim());
+}
+
+async function savePenseBete(texte) {
+  penseBeteTexte = texte;
+
+  const datees = notesGlobales.map(n => ({
+    id: n.id, title: n.title, start: n.start,
+    end: n.end, categorie: n.categorie, description: n.description
+  }));
+
+  await fetch(NOTES_API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({ notes: avecPenseBete(datees) })
+  });
+
+  alert("Pense-bête enregistré. La page va se recharger.");
+  setTimeout(() => location.reload(), 1500);
+}
+
+function initBoutonPenseBete() {
+  const btn = document.getElementById("btnPenseBete");
+  if (btn) btn.addEventListener("click", ouvrirPenseBete);
+}
+
 /* ── Init calendrier ──────────────────────────────────── */
 
 async function chargerCalendrier() {
@@ -735,6 +813,7 @@ async function chargerCalendrier() {
   calendar.render();
   majIndicateur();
   initBoutonSync();
+  initBoutonPenseBete();
 
   setInterval(rafraichir, REFRESH_MS);
   document.addEventListener("visibilitychange", () => {
