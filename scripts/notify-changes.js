@@ -109,7 +109,7 @@ function main() {
     headers: {
       "Title": titre,               // en-têtes ASCII uniquement
       "Tags": "calendar",
-      "Priority": "default",
+      "Priority": "high",           // iOS : déclenche son + vibration
       "Click": CALENDRIER_URL
     },
     body: corps                     // le corps porte accents et emojis (UTF-8)

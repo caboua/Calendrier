@@ -100,7 +100,7 @@ function main() {
     headers: {
       "Title": titre,
       "Tags": "pushpin",
-      "Priority": "default",
+      "Priority": "high",   // iOS : déclenche son + vibration
       "Click": CALENDRIER_URL
     },
     body: corps
