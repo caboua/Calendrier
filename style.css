@@ -331,6 +331,10 @@ body {
   min-height: 1.1em;
 }
 
+/* Réservations / notes déjà passées : estompées (historique) */
+.fc-passe { opacity: .42; }
+.reservation-item.passe { opacity: .6; }
+
 /* ── Stats ─────────────────────────────────────────────── */
 .stats-bar {
   display: flex;

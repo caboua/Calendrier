@@ -110,6 +110,12 @@ function isCurrentOrFuture(r) {
   return new Date((r.end || r.start) + "T00:00:00") >= today;
 }
 
+function estPasse(r) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date((r.end || r.start) + "T00:00:00") < today;
+}
+
 function overlapsMonth(r, date) {
   const ms = new Date(date.getFullYear(), date.getMonth(), 1);
   const me = new Date(date.getFullYear(), date.getMonth() + 1, 1);
@@ -449,11 +455,12 @@ function cleKey(r) {
 
 function cardReservation(r) {
   const sc = sourceClass(r.source, r.type);
+  const passe = estPasse(r) ? " passe" : "";
 
   if (r.type === "note") {
     const c = couleurNote(r.categorie);
     return `
-      <article class="reservation-item note" data-key="${escapeHtml(cleKey(r))}" style="border-left-color:${c.bg}">
+      <article class="reservation-item note${passe}" data-key="${escapeHtml(cleKey(r))}" style="border-left-color:${c.bg}">
         <div class="res-header">
           <div class="res-name">${escapeHtml(r.nom)}</div>
           <span class="res-source note" style="background:${c.bg};color:${c.fg}">${escapeHtml(c.label)}</span>
@@ -469,7 +476,7 @@ function cardReservation(r) {
   const nom = r.nom || `${r.source || "Plateforme"} — informations en attente`;
 
   return `
-    <article class="reservation-item ${sc}${todo ? " acompleter" : ""}" data-key="${escapeHtml(cleKey(r))}">
+    <article class="reservation-item ${sc}${todo ? " acompleter" : ""}${passe}" data-key="${escapeHtml(cleKey(r))}">
       <div class="res-header">
         <div class="res-name">${escapeHtml(nom)}</div>
         <span class="res-source ${sc}">${escapeHtml(r.source || "Airbnb")}</span>
@@ -560,14 +567,17 @@ async function chargerDonnees() {
     categorie: categorieNote(n)
   }));
 
+  /* Notes : passées + à venir (on garde l'historique au calendrier). */
   const notes = nouvellesNotes
     .map(normalizeNote)
-    .filter(isValidNote)
-    .filter(isCurrentOrFuture);
+    .filter(isValidNote);
 
   const aVenir = reservations.concat(reservationsAuto)
     .sort((a, b) => a.start.localeCompare(b.start));
-  const toutes = aVenir.concat(notes)
+
+  /* Affichage = réservations passées + à venir + notes : le calendrier
+     conserve tout l'historique (les cartes passées sont estompées). */
+  const toutes = passees.concat(aVenir).concat(notes)
     .sort((a, b) => a.start.localeCompare(b.start));
 
   return {
@@ -593,6 +603,8 @@ function appliquerDonnees(d) {
 
 function versEvenements(items) {
   return items.map(r => {
+    const passe = estPasse(r);
+
     if (r.type === "note") {
       const c = couleurNote(r.categorie);
       return {
@@ -603,6 +615,7 @@ function versEvenements(items) {
         color: c.bg,
         textColor: c.fg,
         display: "block",
+        classNames: passe ? ["fc-passe"] : [],
         extendedProps: r
       };
     }
@@ -617,7 +630,10 @@ function versEvenements(items) {
       allDay: true,
       color: colors[sc] || "#ff385c",
       display: "block",
-      classNames: r.aCompleter ? ["fc-acompleter"] : [],
+      classNames: [
+        ...(r.aCompleter ? ["fc-acompleter"] : []),
+        ...(passe ? ["fc-passe"] : [])
+      ],
       extendedProps: r
     };
   });
