@@ -196,6 +196,30 @@ function couleurNote(cat) {
   return NOTE_CATS[cat] || NOTE_CATS.perso;
 }
 
+/* Montant d'une location directe : stocké dans la description sous la forme
+   « [montant: 450 €] » (invisible pour l'utilisateur, aucune modif du script
+   Google nécessaire). */
+const MONTANT_RE = /\[montant:\s*([0-9]+(?:[.,][0-9]{1,2})?)\s*(?:€|EUR)?\s*\]/i;
+
+function montantNote(n) {
+  const m = MONTANT_RE.exec(String((n && n.description) || ""));
+  if (!m) return 0;
+  const v = parseFloat(m[1].replace(",", "."));
+  return isNaN(v) ? 0 : v;
+}
+
+/* Description sans le marqueur de montant (ce que voit l'utilisateur). */
+function descriptionSansMontant(desc) {
+  return String(desc || "").replace(MONTANT_RE, "").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function descriptionAvecMontant(desc, montant) {
+  const propre = descriptionSansMontant(desc);
+  if (!montant || montant <= 0) return propre;
+  const tag = `[montant: ${String(montant).replace(".", ",")} €]`;
+  return propre ? propre + "\n" + tag : tag;
+}
+
 function normalizeNote(n, index) {
   const start = n.start;
   const end = n.end || addDaysISO(start, 1);
@@ -276,7 +300,14 @@ function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
 
       <div class="modal-field full">
         <label>Informations</label>
-        <textarea id="noteDescription" rows="5" placeholder="Écris ici les informations..." style="width:100%;border:none;background:transparent;font-family:inherit;font-weight:500;resize:vertical">${escapeHtml(note?.description || "")}</textarea>
+        <textarea id="noteDescription" rows="5" placeholder="Écris ici les informations..." style="width:100%;border:none;background:transparent;font-family:inherit;font-weight:500;resize:vertical">${escapeHtml(descriptionSansMontant(note?.description))}</textarea>
+      </div>
+
+      <div class="modal-field full" id="noteMontantChamp">
+        <label>Montant reçu (location directe)</label>
+        <input id="noteMontant" type="number" min="0" step="0.01" inputmode="decimal"
+          value="${montantNote(note) || ""}" placeholder="Ex : 450"
+          style="width:100%;border:none;background:transparent;font-weight:600">
       </div>
 
       <div class="modal-field full">
@@ -314,6 +345,9 @@ function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
     const c = couleurNote(categorieChoisie);
     const tag = document.getElementById("noteTag");
     if (tag) { tag.style.background = c.bg; tag.style.color = c.fg; }
+    /* Le montant ne concerne que les locations directes. */
+    const champMontant = document.getElementById("noteMontantChamp");
+    if (champMontant) champMontant.style.display = categorieChoisie === "manuel" ? "" : "none";
   };
   document.querySelectorAll(".note-cat-btn").forEach(b =>
     b.addEventListener("click", () => { categorieChoisie = b.dataset.cat; majPicker(); }));
@@ -323,7 +357,11 @@ function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
     const start = document.getElementById("noteStart").value;
     let end = document.getElementById("noteEnd").value;
     const title = document.getElementById("noteTitle").value.trim();
-    const description = document.getElementById("noteDescription").value.trim();
+    const descSaisie = document.getElementById("noteDescription").value.trim();
+    const montant = categorieChoisie === "manuel"
+      ? parseFloat(document.getElementById("noteMontant").value) || 0
+      : 0;
+    const description = descriptionAvecMontant(descSaisie, montant);
 
     if (!start || !title) {
       alert("Date de début et titre obligatoires.");
@@ -392,6 +430,33 @@ function updateStats(reservations, calendarDate) {
 
   document.getElementById("statRevenuAnnee").textContent =
     formatEuros(cumul.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
+
+  majDirect(calendarDate, now);
+}
+
+/* Locations directes (notes « Location manuelle » avec un montant saisi) */
+function majDirect(calendarDate, now) {
+  const manuelles = notesGlobales.filter(n => categorieNote(n) === "manuel" && montantNote(n) > 0);
+
+  const mois = manuelles
+    .filter(n => overlapsMonth({ start: n.start, end: n.end }, calendarDate))
+    .reduce((s, n) => s + montantNote(n), 0);
+
+  const annee = manuelles
+    .filter(n => new Date(n.start + "T00:00:00").getFullYear() === now.getFullYear())
+    .reduce((s, n) => s + montantNote(n), 0);
+
+  const ligneMois = document.getElementById("directMois");
+  const ligneAnnee = document.getElementById("directAnnee");
+
+  if (ligneMois) {
+    ligneMois.hidden = mois <= 0;
+    ligneMois.textContent = mois > 0 ? `＋ ${formatEuros(mois)} en direct` : "";
+  }
+  if (ligneAnnee) {
+    ligneAnnee.hidden = annee <= 0;
+    ligneAnnee.textContent = annee > 0 ? `＋ ${formatEuros(annee)} en direct` : "";
+  }
 }
 
 /* ── Modal réservation ────────────────────────────────── */
@@ -466,7 +531,10 @@ function cardReservation(r) {
           <span class="res-source note" style="background:${c.bg};color:${c.fg}">${escapeHtml(c.label)}</span>
         </div>
         <div class="res-dates">📝 ${formatDateFR(r.start)} → ${formatDateFR(r.end)}</div>
-        <div class="res-meta"><span>${escapeHtml(r.description || "").split("\n")[0] || "Voir le détail"}</span></div>
+        <div class="res-meta">
+          <span>${escapeHtml(descriptionSansMontant(r.description).split("\n")[0]) || "Voir le détail"}</span>
+          ${montantNote(r) > 0 ? `<span>💰 ${formatEuros(montantNote(r))}</span>` : ""}
+        </div>
       </article>
     `;
   }

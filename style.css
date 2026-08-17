@@ -331,6 +331,17 @@ body {
   min-height: 1.1em;
 }
 
+/* Ligne « en direct » sous les montants (locations manuelles) */
+.stat-direct {
+  margin-top: 3px;
+  font-size: .74rem;
+  font-weight: 700;
+  color: #7c3aed;
+  white-space: nowrap;
+}
+
+.stat-direct[hidden] { display: none; }
+
 /* Réservations / notes déjà passées : estompées (historique) */
 .fc-passe { opacity: .42; }
 .reservation-item.passe { opacity: .6; }
