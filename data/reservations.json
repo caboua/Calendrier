@@ -65,6 +65,16 @@
     "summary": "Airbnb (Not available)",
     "description": "",
     "location": "",
+    "uid": "7f662ec65913-05f341e96cc3e5b43eabdb0d47a2fd0e@airbnb.com",
+    "start": "2027-01-07",
+    "end": "2027-01-14"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
     "uid": "7f662ec65913-bb3cd2f9c133571288c650ae5ee23024@airbnb.com",
     "start": "2027-01-17",
     "end": "2027-01-23"
