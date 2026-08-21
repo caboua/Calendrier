@@ -1,16 +1,6 @@
 [
   {
     "source": "Airbnb",
-    "title": "Reserved",
-    "summary": "Reserved",
-    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMYAZYD9E2\nPhone Number (Last 4 Digits): 4584",
-    "location": "",
-    "uid": "1418fb94e984-596cbbf9d8348e476406a475f7801ee9@airbnb.com",
-    "start": "2026-08-17",
-    "end": "2026-08-19"
-  },
-  {
-    "source": "Airbnb",
     "title": "Airbnb (Not available)",
     "summary": "Airbnb (Not available)",
     "description": "",
