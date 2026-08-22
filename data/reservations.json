@@ -118,5 +118,15 @@
     "uid": "898db86ace10362ec3bb86ad35453b0c@booking.com",
     "start": "2027-02-10",
     "end": "2027-02-16"
+  },
+  {
+    "source": "Booking",
+    "title": "CLOSED - Not available",
+    "summary": "CLOSED - Not available",
+    "description": "",
+    "location": "",
+    "uid": "39e95e2a961a23f2ac9e53b56a5132a1@booking.com",
+    "start": "2027-03-26",
+    "end": "2027-03-29"
   }
 ]
