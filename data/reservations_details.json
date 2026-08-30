@@ -190,5 +190,17 @@
     "vous_gagnez": "860,39 €",
     "nuits": 6,
     "sujet": "Ajout manuel depuis extranet Booking"
+  },
+  {
+    "source": "Airbnb",
+    "nom": "Mathilde Etancelin-Jamet",
+    "start": "2027-02-19",
+    "end": "2027-02-28",
+    "voyageurs": "2 adultes, 1 enfant, 1 bébé",
+    "code": "HMPFE9MF9F",
+    "total_paye": "1455,00 €",
+    "vous_gagnez": "1191,45 €",
+    "nuits": 9,
+    "sujet": "Réservation confirmée : Mathilde Etancelin-Jamet arrive le 19 févr."
   }
 ]
