@@ -148,5 +148,15 @@
     "uid": "39e95e2a961a23f2ac9e53b56a5132a1@booking.com",
     "start": "2027-03-26",
     "end": "2027-03-29"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-a42f51171e556b10a39f9bfe14970b26@airbnb.com",
+    "start": "2027-04-04",
+    "end": "2027-04-14"
   }
 ]
