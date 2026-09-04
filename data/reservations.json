@@ -57,17 +57,7 @@
     "location": "",
     "uid": "7f662ec65913-bb3cd2f9c133571288c650ae5ee23024@airbnb.com",
     "start": "2027-01-17",
-    "end": "2027-01-24"
-  },
-  {
-    "source": "Airbnb",
-    "title": "Reserved",
-    "summary": "Reserved",
-    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMP89EBWY9\nPhone Number (Last 4 Digits): 2637",
-    "location": "",
-    "uid": "1418fb94e984-5408ca1a8676861f15f909a0c8489f3b@airbnb.com",
-    "start": "2027-01-24",
-    "end": "2027-01-28"
+    "end": "2027-01-23"
   },
   {
     "source": "Airbnb",
@@ -75,8 +65,8 @@
     "summary": "Airbnb (Not available)",
     "description": "",
     "location": "",
-    "uid": "7f662ec65913-6642fd598509015fee473486bcbd0261@airbnb.com",
-    "start": "2027-01-28",
+    "uid": "7f662ec65913-f68f6ca2f13e2acd8de50f4756c69964@airbnb.com",
+    "start": "2027-01-29",
     "end": "2027-01-30"
   },
   {
