@@ -80,6 +80,14 @@
     "description": "Mme ROSON Mireille \nMontant: 540€\nAcomptes 120€ \nReste à payer 378€\n[montant: 540 €]"
   },
   {
+    "id": "note_1790103014146",
+    "title": "Home exchange",
+    "start": "2027-04-21",
+    "end": "2027-05-03",
+    "categorie": "perso",
+    "description": "Mère et sa fille de 13ans + sa soeur et sa mère"
+  },
+  {
     "id": "pensebete",
     "title": "pensebete",
     "start": "",
