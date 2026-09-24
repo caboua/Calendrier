@@ -132,6 +132,18 @@
     "sujet": "Réservation confirmée : Pisiou Panay arrive le 17 août"
   },
   {
+    "source": "Airbnb",
+    "nom": "Laurent La Macchia",
+    "start": "2026-11-26",
+    "end": "2026-11-27",
+    "voyageurs": "5 adultes",
+    "code": "HMYYZEQNN2",
+    "total_paye": "192,75 €",
+    "vous_gagnez": "156,32 €",
+    "nuits": 1,
+    "sujet": "Réservation confirmée : Laurent La Macchia arrive le 26 nov."
+  },
+  {
     "source": "Booking",
     "nom": "François Casas",
     "start": "2026-12-05",
