@@ -133,6 +133,18 @@
   },
   {
     "source": "Airbnb",
+    "nom": "Mariana Simona Boblea Podasca",
+    "start": "2026-11-12",
+    "end": "2026-11-16",
+    "voyageurs": "4 adultes",
+    "code": "HMXPH3DBB3",
+    "total_paye": "670,50 €",
+    "vous_gagnez": "540,80 €",
+    "nuits": 4,
+    "sujet": "Réservation confirmée : Mariana Simona Boblea Podasca arrive le 12 nov."
+  },
+  {
+    "source": "Airbnb",
     "nom": "Laurent La Macchia",
     "start": "2026-11-26",
     "end": "2026-11-27",
