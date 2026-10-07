@@ -70,16 +70,6 @@
     "end": "2026-12-20"
   },
   {
-    "source": "Booking",
-    "title": "CLOSED - Not available",
-    "summary": "CLOSED - Not available",
-    "description": "",
-    "location": "",
-    "uid": "bac8fecd218b2919f3e5a5b65a9c0061@booking.com",
-    "start": "2026-12-05",
-    "end": "2026-12-18"
-  },
-  {
     "source": "Airbnb",
     "title": "Airbnb (Not available)",
     "summary": "Airbnb (Not available)",
@@ -158,16 +148,6 @@
     "uid": "7f662ec65913-be2f68508a4b1f270429eacc6761b31f@airbnb.com",
     "start": "2027-02-10",
     "end": "2027-02-17"
-  },
-  {
-    "source": "Booking",
-    "title": "CLOSED - Not available",
-    "summary": "CLOSED - Not available",
-    "description": "",
-    "location": "",
-    "uid": "898db86ace10362ec3bb86ad35453b0c@booking.com",
-    "start": "2027-02-10",
-    "end": "2027-02-16"
   },
   {
     "source": "Airbnb",
@@ -288,5 +268,15 @@
     "uid": "7f662ec65913-6a05e0c2784706aaf263634c18f34918@airbnb.com",
     "start": "2027-04-30",
     "end": "2027-05-05"
+  },
+  {
+    "source": "Booking",
+    "title": "CLOSED - Not available",
+    "summary": "CLOSED - Not available",
+    "description": "",
+    "location": "",
+    "uid": "a2f815291e8d24e05ac6b5a2f40e7b0f@booking.com",
+    "start": "2027-10-08",
+    "end": "2028-04-07"
   }
 ]
