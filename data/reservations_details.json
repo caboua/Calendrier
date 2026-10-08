@@ -262,5 +262,17 @@
     "vous_gagnez": "790,92 €",
     "nuits": 6,
     "sujet": "Réservation confirmée : Romain Pommart arrive le 13 mars"
+  },
+  {
+    "source": "Booking",
+    "nom": "Patrick PAUL",
+    "start": "2027-03-26",
+    "end": "2027-03-29",
+    "voyageurs": "1 adulte",
+    "code": "5902312687",
+    "total_paye": "372,00 €",
+    "vous_gagnez": "313,25 €",
+    "nuits": 3,
+    "sujet": "Ajout manuel depuis extranet Booking"
   }
 ]

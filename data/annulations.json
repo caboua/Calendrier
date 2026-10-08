@@ -8,14 +8,6 @@
     "detecte": "2026-07-14"
   },
   {
-    "key": "5647275875",
-    "source": "Booking",
-    "nom": "François Casas",
-    "start": "2026-12-05",
-    "end": "2026-12-18",
-    "detecte": "2026-10-07"
-  },
-  {
     "key": "HMTH5Y3Y9F",
     "source": "Airbnb",
     "nom": "Genevieve Bassellier",
@@ -30,13 +22,5 @@
     "start": "2027-01-24",
     "end": "2027-01-28",
     "detecte": "2026-09-04"
-  },
-  {
-    "key": "5595759799",
-    "source": "Booking",
-    "nom": "Yvon Marzin",
-    "start": "2027-02-10",
-    "end": "2027-02-16",
-    "detecte": "2026-10-07"
   }
 ]

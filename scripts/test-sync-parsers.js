@@ -70,4 +70,20 @@ assert.equal(booking.voyageurs, "3 adultes");
 assert.equal(booking.total_paye, "1748,49 €");
 assert.equal(booking.vous_gagnez, "1474,80 €");
 
+const { updateCancellations } = require("./sync-ical");
+
+const today = new Date("2026-10-08T00:00:00");
+const cancelled = updateCancellations({
+  calendarRows: [],
+  details: [
+    { source: "Airbnb", code: "HMX", nom: "A", start: "2026-12-01", end: "2026-12-03" },
+    { source: "Booking", code: "5600", nom: "B", start: "2026-12-05", end: "2026-12-18" }
+  ],
+  cancelled: [],
+  fetchedSources: new Set(["airbnb", "booking"]),
+  today
+});
+
+assert.deepEqual(cancelled.map(c => c.key), ["HMX"]);
+
 console.log("Reservation email parser tests passed.");

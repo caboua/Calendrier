@@ -47,6 +47,8 @@ function updateCancellations({ calendarRows, details, cancelled, fetchedSources,
   for (const reservation of details) {
     const source = String(reservation.source || "").toLowerCase();
     if (!fetchedSources.has(source)) continue;
+    // Le flux iCal Booking a omis des séjours confirmés (oct. 2026) : pas d'annulation déduite.
+    if (source === "booking") continue;
     if (!reservation.start || !reservation.end) continue;
     if (new Date(reservation.end + "T00:00:00") < today) continue;
 
