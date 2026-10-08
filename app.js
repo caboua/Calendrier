@@ -409,18 +409,18 @@ function ouvrirNoteForm(note = null, startISO = null, endISO = null) {
 function updateStats(reservations, calendarDate) {
   const duMois = reservations.filter(r => overlapsMonth(r, calendarDate));
 
-  /* Cumul annuel : toute l'année en cours (janvier → décembre),
-     d'après la date d'arrivée. Les années suivantes sont exclues. */
-  const now = new Date();
+  /* Cumul annuel : l'année du mois affiché dans le calendrier,
+     d'après la date d'arrivée. Permet de voir 2027 en naviguant sur janvier. */
+  const anneeAffichee = calendarDate.getFullYear();
   const cumul = reservations.filter(r => {
     const d = new Date(r.start + "T00:00:00");
-    return d.getFullYear() === now.getFullYear();
+    return d.getFullYear() === anneeAffichee;
   });
 
   const labelNuits = document.getElementById("labelNuitsAnnee");
   const labelRevenu = document.getElementById("labelRevenuAnnee");
-  if (labelNuits) labelNuits.textContent = `Nuits en ${now.getFullYear()}`;
-  if (labelRevenu) labelRevenu.textContent = `À recevoir en ${now.getFullYear()}`;
+  if (labelNuits) labelNuits.textContent = `Nuits en ${anneeAffichee}`;
+  if (labelRevenu) labelRevenu.textContent = `À recevoir en ${anneeAffichee}`;
 
   document.getElementById("statNuitsMois").textContent =
     duMois.reduce((s, r) => s + r.nuits, 0) || "0";
@@ -434,11 +434,11 @@ function updateStats(reservations, calendarDate) {
   document.getElementById("statRevenuAnnee").textContent =
     formatEuros(cumul.reduce((s, r) => s + parseEuros(r.vous_gagnez), 0));
 
-  majDirect(calendarDate, now);
+  majDirect(calendarDate, anneeAffichee);
 }
 
 /* Locations directes (notes « Location manuelle » avec un montant saisi) */
-function majDirect(calendarDate, now) {
+function majDirect(calendarDate, anneeAffichee) {
   const manuelles = notesGlobales.filter(n => categorieNote(n) === "manuel" && montantNote(n) > 0);
 
   const mois = manuelles
@@ -446,7 +446,7 @@ function majDirect(calendarDate, now) {
     .reduce((s, n) => s + montantNote(n), 0);
 
   const annee = manuelles
-    .filter(n => new Date(n.start + "T00:00:00").getFullYear() === now.getFullYear())
+    .filter(n => new Date(n.start + "T00:00:00").getFullYear() === anneeAffichee)
     .reduce((s, n) => s + montantNote(n), 0);
 
   const ligneMois = document.getElementById("directMois");
