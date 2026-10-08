@@ -163,6 +163,9 @@ function isGuestStay(r) {
 function hasExactCalendarStay(reservation, calendarRows) {
   const source = (reservation.source || "").toLowerCase();
   if (source !== "airbnb" && source !== "booking") return true;
+  // Le flux iCal Booking a omis des séjours confirmés (oct. 2026) :
+  // on fait confiance aux détails issus des e-mails sans vérifier l'iCal.
+  if (source === "booking") return true;
 
   return calendarRows.some(row =>
     (row.source || "").toLowerCase() === source &&
