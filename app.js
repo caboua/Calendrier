@@ -904,6 +904,39 @@ function initBoutonPenseBete() {
   if (btn) btn.addEventListener("click", ouvrirPenseBete);
 }
 
+/* ── Swipe / scroll horizontal sur le calendrier ─────── */
+
+function initSwipeCalendrier() {
+  const el = document.getElementById("calendar");
+  if (!el) return;
+
+  /* ── Swipe tactile (mobile) ── */
+  let touchX = null;
+  el.addEventListener("touchstart", e => {
+    touchX = e.touches[0].clientX;
+  }, { passive: true });
+
+  el.addEventListener("touchend", e => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (Math.abs(dx) < 50) return;          // trop petit → ignoré
+    if (dx < 0) calendar.next();            // glisser gauche → mois suivant
+    else         calendar.prev();            // glisser droite → mois précédent
+  }, { passive: true });
+
+  /* ── Scroll horizontal (trackpad / molette) ── */
+  let wheelTimer = null;
+  el.addEventListener("wheel", e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // scroll vertical → ignoré
+    e.preventDefault();
+    if (wheelTimer) return;                  // debounce : 1 action max toutes les 600 ms
+    wheelTimer = setTimeout(() => { wheelTimer = null; }, 600);
+    if (e.deltaX > 0) calendar.next();
+    else               calendar.prev();
+  }, { passive: false });
+}
+
 /* ── Init calendrier ──────────────────────────────────── */
 
 async function chargerCalendrier() {
@@ -971,6 +1004,7 @@ async function chargerCalendrier() {
   majIndicateur();
   initBoutonSync();
   initBoutonPenseBete();
+  initSwipeCalendrier();
 
   setInterval(rafraichir, REFRESH_MS);
   document.addEventListener("visibilitychange", () => {
