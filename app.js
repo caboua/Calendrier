@@ -907,30 +907,44 @@ function initBoutonPenseBete() {
 /* ── Swipe / scroll horizontal sur le calendrier ─────── */
 
 function initSwipeCalendrier() {
-  const el = document.getElementById("calendar");
-  if (!el) return;
+  const calEl = document.getElementById("calendar");
+  if (!calEl) return;
 
-  /* ── Swipe tactile (mobile) ── */
-  let touchX = null;
-  el.addEventListener("touchstart", e => {
-    touchX = e.touches[0].clientX;
+  /* ── Swipe tactile (mobile) ──────────────────────────────────────────────
+     On écoute sur document (FullCalendar bloque la propagation sur ses
+     propres éléments). On détecte un swipe horizontal via touchmove pour
+     ne pas confondre avec un tap sur une date. */
+  let startX = null, startY = null, swipeDetecte = false;
+
+  document.addEventListener("touchstart", e => {
+    if (!calEl.contains(e.target)) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    swipeDetecte = false;
   }, { passive: true });
 
-  el.addEventListener("touchend", e => {
-    if (touchX === null) return;
-    const dx = e.changedTouches[0].clientX - touchX;
-    touchX = null;
-    if (Math.abs(dx) < 50) return;          // trop petit → ignoré
-    if (dx < 0) calendar.next();            // glisser gauche → mois suivant
-    else         calendar.prev();            // glisser droite → mois précédent
+  document.addEventListener("touchmove", e => {
+    if (startX === null) return;
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if (dx > 12 && dx > dy * 1.2) swipeDetecte = true;  // clairement horizontal
+  }, { passive: true });
+
+  document.addEventListener("touchend", e => {
+    if (startX === null || !swipeDetecte) { startX = null; return; }
+    const dx = e.changedTouches[0].clientX - startX;
+    startX = null; swipeDetecte = false;
+    if (Math.abs(dx) < 50) return;
+    if (dx < 0) calendar.next();   // ← glisse gauche = mois suivant
+    else         calendar.prev();   // → glisse droite = mois précédent
   }, { passive: true });
 
   /* ── Scroll horizontal (trackpad / molette) ── */
   let wheelTimer = null;
-  el.addEventListener("wheel", e => {
-    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // scroll vertical → ignoré
+  calEl.addEventListener("wheel", e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
     e.preventDefault();
-    if (wheelTimer) return;                  // debounce : 1 action max toutes les 600 ms
+    if (wheelTimer) return;
     wheelTimer = setTimeout(() => { wheelTimer = null; }, 600);
     if (e.deltaX > 0) calendar.next();
     else               calendar.prev();
