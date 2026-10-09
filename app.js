@@ -612,6 +612,7 @@ async function chargerDonnees() {
 
   const reservationsAuto = bloque
     .filter(isGuestStay)
+    .filter(r => countNights(r.start, r.end) <= 60) // ignorer les blocs horizon Booking (> 60 nuits)
     .map(normalizeIcalReservation)
     .filter(isValidIcal)
     .filter(isCurrentOrFuture)
