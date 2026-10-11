@@ -65,6 +65,26 @@
     "summary": "Airbnb (Not available)",
     "description": "",
     "location": "",
+    "uid": "7f662ec65913-86009cc361823fe705c2609f1be27298@airbnb.com",
+    "start": "2026-11-29",
+    "end": "2026-11-30"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Reserved",
+    "summary": "Reserved",
+    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMAXX8PKP2\nPhone Number (Last 4 Digits): 0259",
+    "location": "",
+    "uid": "1418fb94e984-445da5ed62a3ee6cdfeb3d36547cfddd@airbnb.com",
+    "start": "2026-11-30",
+    "end": "2026-12-03"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
     "uid": "7f662ec65913-3efe4bf19de852e6d576009d86c39f65@airbnb.com",
     "start": "2026-12-03",
     "end": "2026-12-20"
