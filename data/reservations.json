@@ -290,6 +290,16 @@
     "end": "2027-05-05"
   },
   {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-5a3cb71251e0713e2158d040ae689917@airbnb.com",
+    "start": "2027-09-01",
+    "end": "2027-10-13"
+  },
+  {
     "source": "Booking",
     "title": "CLOSED - Not available",
     "summary": "CLOSED - Not available",
