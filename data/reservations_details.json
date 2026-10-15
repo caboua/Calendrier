@@ -181,6 +181,18 @@
   },
   {
     "source": "Airbnb",
+    "nom": "Jean-Mathieu Bernard",
+    "start": "2026-12-24",
+    "end": "2026-12-26",
+    "voyageurs": "3 adultes, 1 enfant",
+    "code": "HM33954EQW",
+    "total_paye": "386,90 €",
+    "vous_gagnez": "316,03 €",
+    "nuits": 2,
+    "sujet": "Réservation confirmée : Jean-Mathieu Bernard arrive le 24 déc."
+  },
+  {
+    "source": "Airbnb",
     "nom": "K F",
     "start": "2026-12-28",
     "end": "2027-01-03",
