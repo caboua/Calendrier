@@ -5,6 +5,36 @@
     "summary": "Airbnb (Not available)",
     "description": "",
     "location": "",
+    "uid": "7f662ec65913-aaf9134e098e2ad7a3ffa4abd3114df4@airbnb.com",
+    "start": "2026-11-04",
+    "end": "2026-11-05"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Reserved",
+    "summary": "Reserved",
+    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HM5H28BHRR\nPhone Number (Last 4 Digits): 4231",
+    "location": "",
+    "uid": "1418fb94e984-50c2df3ef8094b94908d87191b729452@airbnb.com",
+    "start": "2026-11-05",
+    "end": "2026-11-08"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-50f4b0df2b7bae350b7944b811c72a01@airbnb.com",
+    "start": "2026-11-08",
+    "end": "2026-11-09"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
     "uid": "7f662ec65913-4e9c38edd9fe3c0bdf16b4dad77c1241@airbnb.com",
     "start": "2026-11-11",
     "end": "2026-11-12"
