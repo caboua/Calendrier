@@ -175,6 +175,36 @@
     "summary": "Airbnb (Not available)",
     "description": "",
     "location": "",
+    "uid": "7f662ec65913-1e9474cba006244f3d9972afa3fd7d18@airbnb.com",
+    "start": "2027-01-09",
+    "end": "2027-01-10"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Reserved",
+    "summary": "Reserved",
+    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMESFRAE9C\nPhone Number (Last 4 Digits): 7545",
+    "location": "",
+    "uid": "1418fb94e984-461bec2cbd9c2d77a8782a430dafab7b@airbnb.com",
+    "start": "2027-01-10",
+    "end": "2027-01-15"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-df7c078ef396cb600f50e2a45dc88b48@airbnb.com",
+    "start": "2027-01-15",
+    "end": "2027-01-16"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
     "uid": "7f662ec65913-bb3cd2f9c133571288c650ae5ee23024@airbnb.com",
     "start": "2027-01-17",
     "end": "2027-01-23"
@@ -357,6 +387,6 @@
     "location": "",
     "uid": "e381c522d0015bb93c8b61dc9e0f495c@booking.com",
     "start": "2027-09-01",
-    "end": "2028-04-19"
+    "end": "2028-04-20"
   }
 ]
