@@ -80,6 +80,14 @@
     "description": "Mme ROSON Mireille \nMontant: 540€\nAcomptes 120€ \nReste à payer 378€\n[montant: 540 €]"
   },
   {
+    "id": "note_1793817560361",
+    "title": "Home exchange",
+    "start": "2027-01-26",
+    "end": "2027-01-28",
+    "categorie": "perso",
+    "description": "Isabelle et Cheng : 2 personnes pour 2 nuits à Malendure"
+  },
+  {
     "id": "pensebete",
     "title": "pensebete",
     "start": "",
