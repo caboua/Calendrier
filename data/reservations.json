@@ -1,16 +1,6 @@
 [
   {
     "source": "Airbnb",
-    "title": "Airbnb (Not available)",
-    "summary": "Airbnb (Not available)",
-    "description": "",
-    "location": "",
-    "uid": "7f662ec65913-4e9c38edd9fe3c0bdf16b4dad77c1241@airbnb.com",
-    "start": "2026-11-11",
-    "end": "2026-11-12"
-  },
-  {
-    "source": "Airbnb",
     "title": "Reserved",
     "summary": "Reserved",
     "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMXPH3DBB3\nPhone Number (Last 4 Digits): 3761",
@@ -327,6 +317,6 @@
     "location": "",
     "uid": "e381c522d0015bb93c8b61dc9e0f495c@booking.com",
     "start": "2027-09-01",
-    "end": "2028-05-13"
+    "end": "2028-05-14"
   }
 ]
