@@ -305,6 +305,36 @@
     "summary": "Airbnb (Not available)",
     "description": "",
     "location": "",
+    "uid": "7f662ec65913-b72185ef517820afdf8016c82f2a79b6@airbnb.com",
+    "start": "2027-06-30",
+    "end": "2027-07-01"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Reserved",
+    "summary": "Reserved",
+    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMEYACAJ34\nPhone Number (Last 4 Digits): 4009",
+    "location": "",
+    "uid": "1418fb94e984-ac483f3609f4eea5c5758e51ea11b035@airbnb.com",
+    "start": "2027-07-01",
+    "end": "2027-07-21"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
+    "uid": "7f662ec65913-be6f46f05c14eab72dcfb5f4d15d9b29@airbnb.com",
+    "start": "2027-07-21",
+    "end": "2027-07-22"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Airbnb (Not available)",
+    "summary": "Airbnb (Not available)",
+    "description": "",
+    "location": "",
     "uid": "7f662ec65913-5a3cb71251e0713e2158d040ae689917@airbnb.com",
     "start": "2027-09-01",
     "end": "2027-10-13"
