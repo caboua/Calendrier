@@ -147,7 +147,17 @@
     "location": "",
     "uid": "7f662ec65913-30920a5b1a173b52953e3680c144b985@airbnb.com",
     "start": "2027-02-04",
-    "end": "2027-02-05"
+    "end": "2027-02-06"
+  },
+  {
+    "source": "Airbnb",
+    "title": "Reserved",
+    "summary": "Reserved",
+    "description": "Reservation URL: https://www.airbnb.com/hosting/reservations/details/HM5RFCJRN9\nPhone Number (Last 4 Digits): 8033",
+    "location": "",
+    "uid": "1418fb94e984-407ef4b63e1068dfe133d5c94e19462a@airbnb.com",
+    "start": "2027-02-06",
+    "end": "2027-02-10"
   },
   {
     "source": "Airbnb",
